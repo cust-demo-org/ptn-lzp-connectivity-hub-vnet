@@ -151,7 +151,7 @@ hub_virtual_networks = {
           name             = "snet-default"
           address_prefixes = ["10.0.1.0/24"]
           network_security_group = {
-            id = null  # Will be resolved from nsg_key — see wrapper docs
+            resource_id = null  # Will be resolved from nsg_key — see wrapper docs
           }
         }
       }

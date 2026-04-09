@@ -290,7 +290,7 @@ The entity diagram and descriptions below are preserved for historical context. 
 | `network_watcher_id` | `string` | No | Auto-created | Existing watcher ID |
 | `location` | `string` | No | `var.location` | Azure region |
 | `flow_logs` | `map(object(...))` | No | `null` | Flow log entries |
-| `flow_logs[*].virtual_network` | `object({ key, id })` | Yes (per entry) | — | Hub VNet reference for flow logging |
+| `flow_logs[*].virtual_network` | `object({ key, resource_id })` | Yes (per entry) | — | Hub VNet reference for flow logging |
 | `flow_logs[*].storage_account` | `object(...)` | Yes (per entry) | — | Storage target (key or resource_id) |
 | `flow_logs[*].traffic_analytics` | `object(...)` | No | `null` | Traffic analytics config |
 

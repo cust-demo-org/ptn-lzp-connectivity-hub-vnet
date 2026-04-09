@@ -77,21 +77,21 @@ public_ip_addresses = {
 ```
 
 This pattern applies consistently:
-- `firewall.firewall_policy` → `{ key, id }`
-- `firewall.ip_configuration[].public_ip_address` → `{ key, id }`
-- `firewall.ip_configuration[].subnet` → `{ vnet_key, subnet_key, id }`
-- `firewall.management_ip_configuration.public_ip_address` → `{ key, id }`
-- `firewall.management_ip_configuration.subnet` → `{ vnet_key, subnet_key, id }`
+- `firewall.firewall_policy` → `{ key, resource_id }`
+- `firewall.ip_configuration[].public_ip_address` → `{ key, resource_id }`
+- `firewall.ip_configuration[].subnet` → `{ vnet_key, subnet_key, resource_id }`
+- `firewall.management_ip_configuration.public_ip_address` → `{ key, resource_id }`
+- `firewall.management_ip_configuration.subnet` → `{ vnet_key, subnet_key, resource_id }`
 - `nat_gateway.public_ip_addresses` → `{ keys, ids }`
-- `virtual_network.subnets[].network_security_group` → `{ key, id }`
-- `virtual_network.subnets[].route_table` → `{ key, id }`
-- `virtual_network.subnets[].nat_gateway` → `{ key, id }`
-- `virtual_network_gateway.virtual_network` → `{ key, id }`
-- `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, id }`
-- `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, id }`
-- `private_dns_zones.virtual_network_links[].virtual_network` → `{ key, id }`
-- `byo_private_dns_zone_links[].virtual_network` → `{ key, id }`
-- `flowlog_configuration.flow_logs[].virtual_network` → `{ key, id }`
+- `virtual_network.subnets[].network_security_group` → `{ key, resource_id }`
+- `virtual_network.subnets[].route_table` → `{ key, resource_id }`
+- `virtual_network.subnets[].nat_gateway` → `{ key, resource_id }`
+- `virtual_network_gateway.virtual_network` → `{ key, resource_id }`
+- `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, resource_id }`
+- `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, resource_id }`
+- `private_dns_zones.virtual_network_links[].virtual_network` → `{ key, resource_id }`
+- `byo_private_dns_zone_links[].virtual_network` → `{ key, resource_id }`
+- `flowlog_configuration.flow_logs[].virtual_network` → `{ key, resource_id }`
 
 ### Updated Output Contracts
 

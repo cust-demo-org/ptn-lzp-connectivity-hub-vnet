@@ -146,7 +146,7 @@ module "hub" {
           default = {
             name             = "snet-default"
             address_prefixes = ["10.0.1.0/24"]
-            network_security_group = { id = <resolved_nsg_id> }
+            network_security_group = { resource_id = <resolved_nsg_id> }
           }
         }
       }
@@ -221,8 +221,8 @@ hub_virtual_networks = {
         snet_workload = {
           name             = "snet-workload"
           address_prefixes = ["10.0.1.0/24"]
-          network_security_group = { id = null }  # resolved from nsg_key
-          nat_gateway            = { id = null }  # resolved from nat_gateway_key
+          network_security_group = { resource_id = null }  # resolved from nsg_key
+          nat_gateway            = { resource_id = null }  # resolved from nat_gateway_key
         }
       }
     }
@@ -253,7 +253,7 @@ hub_virtual_networks = {
         snet_workload = {
           name             = "snet-workload"
           address_prefixes = ["10.1.1.0/24"]
-          network_security_group = { id = null }  # resolved from nsg_key
+          network_security_group = { resource_id = null }  # resolved from nsg_key
         }
       }
     }

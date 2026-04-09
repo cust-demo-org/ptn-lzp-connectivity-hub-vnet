@@ -475,16 +475,16 @@ variable "virtual_networks" {
       address_prefix   = optional(string)
       address_prefixes = optional(list(string))
       network_security_group = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       route_table = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       nat_gateway = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       service_endpoints_with_location = optional(list(object({
         service   = string
@@ -614,15 +614,15 @@ variable "virtual_networks" {
       - `name` - (Required) The name of the subnet.
       - `address_prefix` - (Optional) The CIDR address prefix for the subnet. Mutually exclusive with `address_prefixes`.
       - `address_prefixes` - (Optional) A list of CIDR address prefixes for the subnet. Mutually exclusive with `address_prefix`.
-      - `network_security_group` - (Optional) The network security group to associate with this subnet. Provide exactly one of `key` or `id`.
+      - `network_security_group` - (Optional) The network security group to associate with this subnet. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the NSG in the `network_security_groups` variable. **Pattern cross-reference**: resolves to the NSG resource ID via `local.nsg_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing NSG. Use this for externally-managed NSGs not created by this pattern.
-      - `route_table` - (Optional) The route table to associate with this subnet. Provide exactly one of `key` or `id`.
+        - `resource_id` - (Optional) The resource ID of an existing NSG. Use this for externally-managed NSGs not created by this pattern.
+      - `route_table` - (Optional) The route table to associate with this subnet. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the route table in the `route_tables` variable. **Pattern cross-reference**: resolves to the route table resource ID via `local.rt_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing route table. Use this for externally-managed route tables not created by this pattern.
-      - `nat_gateway` - (Optional) The NAT gateway to associate with this subnet. Provide exactly one of `key` or `id`.
+        - `resource_id` - (Optional) The resource ID of an existing route table. Use this for externally-managed route tables not created by this pattern.
+      - `nat_gateway` - (Optional) The NAT gateway to associate with this subnet. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the NAT gateway in the `nat_gateways` variable. **Pattern cross-reference**: resolves to the NAT gateway resource ID via `local.nat_gateway_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing NAT gateway. Use this for externally-managed NAT gateways not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing NAT gateway. Use this for externally-managed NAT gateways not created by this pattern.
       - `service_endpoints_with_location` - (Optional) A list of service endpoint configurations. Defaults to `[]`.
         - `service` - (Required) The service endpoint type (e.g., `"Microsoft.Storage"`).
         - `locations` - (Optional) A list of locations for the service endpoint. Defaults to `["*"]`.
@@ -702,8 +702,8 @@ variable "private_dns_zones" {
     virtual_network_links = optional(map(object({
       name = string
       virtual_network = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       registration_enabled                   = optional(bool, false)
       resolution_policy                      = optional(string, "Default")
@@ -736,9 +736,9 @@ variable "private_dns_zones" {
     - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this DNS zone will be deployed.
     - `virtual_network_links` - (Optional) A map of VNet links to create for this DNS zone. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
       - `name` - (Required) The name of the virtual network link.
-      - `virtual_network` - (Optional) The virtual network to link to this DNS zone. Provide exactly one of `key` or `id`.
+      - `virtual_network` - (Optional) The virtual network to link to this DNS zone. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
       - `registration_enabled` - (Optional) Whether auto-registration of VM DNS records is enabled for this link. Defaults to `false`.
       - `resolution_policy` - (Optional) The resolution policy for the link. Defaults to `"Default"`.
       - `private_dns_zone_supports_private_link` - (Optional) Whether the DNS zone supports private link resolution. Defaults to `false`.
@@ -780,8 +780,8 @@ variable "byo_private_dns_zone_links" {
     name                = string
     private_dns_zone_id = string
     virtual_network = optional(object({
-      key = optional(string)
-      id  = optional(string)
+      key         = optional(string)
+      resource_id = optional(string)
     }))
     registration_enabled                   = optional(bool, false)
     resolution_policy                      = optional(string, "Default")
@@ -794,9 +794,9 @@ variable "byo_private_dns_zone_links" {
 
     - `name` - (Required) The name of the virtual network link.
     - `private_dns_zone_id` - (Required) The Azure resource ID of the existing Private DNS Zone to link.
-    - `virtual_network` - (Optional) The virtual network to link to the DNS zone. Provide exactly one of `key` or `id`.
+    - `virtual_network` - (Optional) The virtual network to link to the DNS zone. Provide exactly one of `key` or `resource_id`.
       - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
-      - `id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
+      - `resource_id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
     - `registration_enabled` - (Optional) Whether auto-registration of DNS records is enabled for this link. Defaults to `false`.
     - `resolution_policy` - (Optional) The resolution policy for the link. Defaults to `"Default"`.
     - `private_dns_zone_supports_private_link` - (Optional) Whether the DNS zone supports private link resolution. Defaults to `false`.
@@ -1102,32 +1102,32 @@ variable "firewalls" {
     sku_name           = string
     sku_tier           = string
     firewall_policy = optional(object({
-      key = optional(string)
-      id  = optional(string)
+      key         = optional(string)
+      resource_id = optional(string)
     }))
     zones = optional(set(string), ["1", "2", "3"])
     ip_configuration = optional(map(object({
       name = string
       subnet = optional(object({
-        vnet_key   = optional(string)
-        subnet_key = optional(string)
-        id         = optional(string)
+        vnet_key    = optional(string)
+        subnet_key  = optional(string)
+        resource_id = optional(string)
       }))
       public_ip_address = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
     })), {})
     management_ip_configuration = optional(object({
       name = string
       subnet = object({
-        vnet_key   = optional(string)
-        subnet_key = optional(string)
-        id         = optional(string)
+        vnet_key    = optional(string)
+        subnet_key  = optional(string)
+        resource_id = optional(string)
       })
       public_ip_address = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
     }))
     private_ip_ranges = optional(set(string))
@@ -1179,28 +1179,28 @@ variable "firewalls" {
     - `location` - (Optional) The Azure region for the firewall. Defaults to `var.location`.
     - `sku_name` - (Required) SKU name of the Firewall. Possible values are `AZFW_Hub` and `AZFW_VNet`. Changing this forces a new resource to be created.
     - `sku_tier` - (Required) SKU tier of the Firewall. Possible values are `Premium`, `Standard` and `Basic`.
-    - `firewall_policy` - (Optional) The firewall policy to associate with this firewall. Provide exactly one of `key` or `id`.
+    - `firewall_policy` - (Optional) The firewall policy to associate with this firewall. Provide exactly one of `key` or `resource_id`.
       - `key` - (Optional) The key of the firewall policy in the `firewall_policies` variable. **Pattern cross-reference**: resolves to the firewall policy resource ID via `local.firewall_policy_resource_ids`.
-      - `id` - (Optional) The resource ID of an existing firewall policy. Use this for externally-managed firewall policies not created by this pattern.
+      - `resource_id` - (Optional) The resource ID of an existing firewall policy. Use this for externally-managed firewall policies not created by this pattern.
     - `zones` - (Optional) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created. Defaults to `["1", "2", "3"]`.
     - `ip_configuration` - (Optional) A map of IP configurations for the firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`. The first `ip_configuration` with a `subnet` reference is used as the primary configuration and determines the firewall's private IP.
       - `name` - (Required) Specifies the name of the IP Configuration.
-      - `subnet` - (Optional) The subnet to associate with this IP configuration. Only the first IP configuration should reference a subnet (must be named `AzureFirewallSubnet`). Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
+      - `subnet` - (Optional) The subnet to associate with this IP configuration. Only the first IP configuration should reference a subnet (must be named `AzureFirewallSubnet`). Provide exactly one of `resource_id` or (`vnet_key` + `subnet_key`).
         - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
         - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
-        - `id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
-      - `public_ip_address` - (Optional) The public IP address to associate with this IP configuration. Provide exactly one of `key` or `id`.
+        - `resource_id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
+      - `public_ip_address` - (Optional) The public IP address to associate with this IP configuration. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
     - `management_ip_configuration` - (Optional) A management IP configuration block for forced tunnelling scenarios. Required when the `sku_tier` is `Basic`. The subnet must be named `AzureFirewallManagementSubnet`.
       - `name` - (Required) Specifies the name of the IP Configuration.
-      - `subnet` - (Required) The subnet to associate with this management IP configuration (must be named `AzureFirewallManagementSubnet`). Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
+      - `subnet` - (Required) The subnet to associate with this management IP configuration (must be named `AzureFirewallManagementSubnet`). Provide exactly one of `resource_id` or (`vnet_key` + `subnet_key`).
         - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
         - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
-        - `id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
-      - `public_ip_address` - (Optional) The public IP address to associate with this management IP configuration. Provide exactly one of `key` or `id`.
+        - `resource_id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
+      - `public_ip_address` - (Optional) The public IP address to associate with this management IP configuration. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
     - `private_ip_ranges` - (Optional) A list of SNAT private CIDR IP ranges, or the special string `IANAPrivateRanges`, which indicates Azure Firewall does not SNAT when the destination IP address is a private range per IANA RFC 1918.
     - `virtual_hub` - (Optional) Virtual Hub configuration for `AZFW_Hub` SKU firewalls.
       - `virtual_hub_id` - (Required) Specifies the ID of the Virtual Hub where the Firewall resides in.
@@ -1253,15 +1253,15 @@ variable "virtual_network_gateways" {
     tags               = optional(map(string), {})
 
     virtual_network = optional(object({
-      key = optional(string)
-      id  = optional(string)
+      key         = optional(string)
+      resource_id = optional(string)
     }))
     subnet_address_prefix   = optional(string, "")
     subnet_creation_enabled = optional(bool, true)
     gateway_subnet = optional(object({
-      id         = optional(string)
-      vnet_key   = optional(string)
-      subnet_key = optional(string)
+      resource_id = optional(string)
+      vnet_key    = optional(string)
+      subnet_key  = optional(string)
     }))
     edge_zone = optional(string)
 
@@ -1270,8 +1270,8 @@ variable "virtual_network_gateways" {
       apipa_addresses               = optional(list(string), null)
       private_ip_address_allocation = optional(string, "Dynamic")
       public_ip_address = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       public_ip = optional(object({
         creation_enabled        = optional(bool, true)
@@ -1486,13 +1486,13 @@ variable "virtual_network_gateways" {
     - `type` - (Optional) The type of the Virtual Network Gateway. Possible values are `ExpressRoute` or `Vpn`. Defaults to `"ExpressRoute"`.
     - `sku` - (Optional) The SKU (size) of the Virtual Network Gateway. Possible values include `Basic`, `Standard`, `HighPerformance`, `UltraPerformance`, `VpnGw1`–`VpnGw5`, `VpnGw1AZ`–`VpnGw5AZ`, `ErGw1AZ`–`ErGw3AZ`. Defaults to `"ErGw1AZ"`.
     - `tags` - (Optional) Tags to apply to this gateway. Defaults to `{}`.
-    - `virtual_network` - (Optional) The virtual network to attach this gateway to. Provide exactly one of `key` or `id`.
+    - `virtual_network` - (Optional) The virtual network to attach this gateway to. Provide exactly one of `key` or `resource_id`.
       - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
-      - `id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+      - `resource_id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
     - `subnet_address_prefix` - (Optional) The address prefix for the GatewaySubnet. Required if `subnet_creation_enabled = true`. Defaults to `""`.
     - `subnet_creation_enabled` - (Optional) Whether to create a GatewaySubnet within the referenced virtual network. Defaults to `true`.
-    - `gateway_subnet` - (Optional) Reference to an existing GatewaySubnet. Used when `subnet_creation_enabled = false`. Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
-      - `id` - (Optional) The resource ID of an existing GatewaySubnet. Use this for externally-managed subnets not created by this pattern.
+    - `gateway_subnet` - (Optional) Reference to an existing GatewaySubnet. Used when `subnet_creation_enabled = false`. Provide exactly one of `resource_id` or (`vnet_key` + `subnet_key`).
+      - `resource_id` - (Optional) The resource ID of an existing GatewaySubnet. Use this for externally-managed subnets not created by this pattern.
       - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
       - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
     - `edge_zone` - (Optional) Specifies the Edge Zone within the Azure Region where this Virtual Network Gateway should exist. Changing this forces a new resource to be created.
@@ -1500,9 +1500,9 @@ variable "virtual_network_gateways" {
       - `name` - (Optional) The name of the IP Configuration.
       - `apipa_addresses` - (Optional) A list of APIPA (Automatic Private IP Addressing) addresses for BGP peering.
       - `private_ip_address_allocation` - (Optional) The private IP allocation method. Possible values are `Static` or `Dynamic`. Defaults to `"Dynamic"`.
-      - `public_ip_address` - (Optional) Reference to a pattern-managed or external public IP address. Provide exactly one of `key` or `id`.
+      - `public_ip_address` - (Optional) Reference to a pattern-managed or external public IP address. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
       - `public_ip` - (Optional) Configuration for a public IP created and managed by the gateway sub-module itself (not via the pattern's `public_ips` variable). Use this when you want the gateway sub-module to create and manage the public IP lifecycle directly. Defaults to creating a Standard, Static, zone-redundant public IP.
         - `creation_enabled` - (Optional) Whether to create a new public IP for this IP configuration. Defaults to `true`. Set to `false` and provide `id` to use an existing public IP.
         - `id` - (Optional) The resource ID of an existing public IP to use when `creation_enabled` is `false`.
@@ -1688,8 +1688,8 @@ variable "flowlog_configuration" {
       enabled = bool
       name    = string
       virtual_network = optional(object({
-        key = optional(string)
-        id  = optional(string)
+        key         = optional(string)
+        resource_id = optional(string)
       }))
       storage_account_id = string
       retention_policy = object({
@@ -1733,9 +1733,9 @@ variable "flowlog_configuration" {
     - `flow_logs` - (Optional) A map of flow logs to create for the Network Watcher. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `null`.
       - `enabled` - (Required) Whether Network Flow Logging should be enabled.
       - `name` - (Required) The name of the Network Watcher Flow Log. Changing this forces a new resource to be created.
-      - `virtual_network` - (Optional) The virtual network for which to enable flow logs. Provide exactly one of `key` or `id`.
+      - `virtual_network` - (Optional) The virtual network for which to enable flow logs. Provide exactly one of `key` or `resource_id`.
         - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
-        - `id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+        - `resource_id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
       - `storage_account_id` - (Required) The resource ID of the storage account for flow log data.
       - `retention_policy` - (Required) The retention policy for flow log records.
         - `days` - (Required) The number of days to retain flow log records.

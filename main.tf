@@ -231,22 +231,22 @@ module "virtual_network" {
       network_security_group = sv.network_security_group != null ? (
         sv.network_security_group.key != null ? {
           id = local.nsg_resource_ids[sv.network_security_group.key]
-          } : sv.network_security_group.id != null ? {
-          id = sv.network_security_group.id
+          } : sv.network_security_group.resource_id != null ? {
+          id = sv.network_security_group.resource_id
         } : null
       ) : null
       route_table = sv.route_table != null ? (
         sv.route_table.key != null ? {
           id = local.rt_resource_ids[sv.route_table.key]
-          } : sv.route_table.id != null ? {
-          id = sv.route_table.id
+          } : sv.route_table.resource_id != null ? {
+          id = sv.route_table.resource_id
         } : null
       ) : null
       nat_gateway = sv.nat_gateway != null ? (
         sv.nat_gateway.key != null ? {
           id = local.nat_gateway_resource_ids[sv.nat_gateway.key]
-          } : sv.nat_gateway.id != null ? {
-          id = sv.nat_gateway.id
+          } : sv.nat_gateway.resource_id != null ? {
+          id = sv.nat_gateway.resource_id
         } : null
       ) : null
       role_assignments = {
@@ -297,14 +297,14 @@ module "virtual_network_gateway" {
   tags             = merge(var.tags, each.value.tags)
 
   virtual_network_id = each.value.virtual_network != null ? (
-    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.id
+    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.resource_id
   ) : null
   subnet_address_prefix   = each.value.subnet_address_prefix
   subnet_creation_enabled = each.value.subnet_creation_enabled
   virtual_network_gateway_subnet_id = each.value.gateway_subnet != null ? (
     each.value.gateway_subnet.vnet_key != null && each.value.gateway_subnet.subnet_key != null ?
     local.subnet_resource_ids["${each.value.gateway_subnet.vnet_key}/${each.value.gateway_subnet.subnet_key}"] :
-    each.value.gateway_subnet.id
+    each.value.gateway_subnet.resource_id
   ) : null
   edge_zone = each.value.edge_zone
 
@@ -312,7 +312,7 @@ module "virtual_network_gateway" {
     for k, v in each.value.ip_configurations : k => merge(v, {
       public_ip = v.public_ip_address != null ? {
         creation_enabled = false
-        id               = v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.id
+        id               = v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.resource_id
       } : v.public_ip
     })
   }
@@ -443,19 +443,19 @@ module "firewall" {
   firewall_sku_name   = each.value.sku_name
   firewall_sku_tier   = each.value.sku_tier
   firewall_policy_id = each.value.firewall_policy != null ? (
-    each.value.firewall_policy.key != null ? local.firewall_policy_resource_ids[each.value.firewall_policy.key] : each.value.firewall_policy.id
+    each.value.firewall_policy.key != null ? local.firewall_policy_resource_ids[each.value.firewall_policy.key] : each.value.firewall_policy.resource_id
   ) : null
   ip_configurations = {
     for k, v in each.value.ip_configuration : k => {
       name                 = v.name
-      public_ip_address_id = v.public_ip_address != null ? (v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.id) : null
-      subnet_id            = v.subnet != null ? (v.subnet.vnet_key != null && v.subnet.subnet_key != null ? local.subnet_resource_ids["${v.subnet.vnet_key}/${v.subnet.subnet_key}"] : v.subnet.id) : null
+      public_ip_address_id = v.public_ip_address != null ? (v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.resource_id) : null
+      subnet_id            = v.subnet != null ? (v.subnet.vnet_key != null && v.subnet.subnet_key != null ? local.subnet_resource_ids["${v.subnet.vnet_key}/${v.subnet.subnet_key}"] : v.subnet.resource_id) : null
     }
   }
   firewall_management_ip_configuration = each.value.management_ip_configuration != null ? {
     name                 = each.value.management_ip_configuration.name
-    public_ip_address_id = each.value.management_ip_configuration.public_ip_address != null ? (each.value.management_ip_configuration.public_ip_address.key != null ? local.public_ip_resource_ids[each.value.management_ip_configuration.public_ip_address.key] : each.value.management_ip_configuration.public_ip_address.id) : null
-    subnet_id            = each.value.management_ip_configuration.subnet.vnet_key != null && each.value.management_ip_configuration.subnet.subnet_key != null ? local.subnet_resource_ids["${each.value.management_ip_configuration.subnet.vnet_key}/${each.value.management_ip_configuration.subnet.subnet_key}"] : each.value.management_ip_configuration.subnet.id
+    public_ip_address_id = each.value.management_ip_configuration.public_ip_address != null ? (each.value.management_ip_configuration.public_ip_address.key != null ? local.public_ip_resource_ids[each.value.management_ip_configuration.public_ip_address.key] : each.value.management_ip_configuration.public_ip_address.resource_id) : null
+    subnet_id            = each.value.management_ip_configuration.subnet.vnet_key != null && each.value.management_ip_configuration.subnet.subnet_key != null ? local.subnet_resource_ids["${each.value.management_ip_configuration.subnet.vnet_key}/${each.value.management_ip_configuration.subnet.subnet_key}"] : each.value.management_ip_configuration.subnet.resource_id
   } : null
   firewall_private_ip_ranges = each.value.private_ip_ranges
   firewall_virtual_hub       = each.value.virtual_hub
@@ -491,7 +491,7 @@ module "private_dns_zone" {
     for vnl_k, vnl in each.value.virtual_network_links : vnl_k => {
       name = vnl.name
       virtual_network_id = vnl.virtual_network != null ? (
-        vnl.virtual_network.key != null ? local.vnet_resource_ids[vnl.virtual_network.key] : vnl.virtual_network.id
+        vnl.virtual_network.key != null ? local.vnet_resource_ids[vnl.virtual_network.key] : vnl.virtual_network.resource_id
       ) : null
       registration_enabled                   = vnl.registration_enabled
       resolution_policy                      = vnl.resolution_policy
@@ -524,7 +524,7 @@ module "private_dns_zone_link" {
   name      = each.value.name
   parent_id = each.value.private_dns_zone_id
   virtual_network_id = each.value.virtual_network != null ? (
-    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.id
+    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.resource_id
   ) : null
   registration_enabled                   = each.value.registration_enabled
   resolution_policy                      = each.value.resolution_policy
@@ -548,7 +548,7 @@ module "network_watcher" {
       enabled = fl.enabled
       name    = fl.name
       target_resource_id = fl.virtual_network != null ? (
-        fl.virtual_network.key != null ? local.vnet_resource_ids[fl.virtual_network.key] : fl.virtual_network.id
+        fl.virtual_network.key != null ? local.vnet_resource_ids[fl.virtual_network.key] : fl.virtual_network.resource_id
       ) : null
       retention_policy   = fl.retention_policy
       storage_account_id = fl.storage_account_id
