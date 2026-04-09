@@ -78,8 +78,12 @@ public_ip_addresses = {
 
 This pattern applies consistently:
 - `firewall.ip_configuration[].public_ip_address` → `{ key, id }`
+- `firewall.ip_configuration[].subnet` → `{ vnet_key, subnet_key, id }`
 - `firewall.management_ip_configuration.public_ip_address` → `{ key, id }`
+- `firewall.management_ip_configuration.subnet` → `{ vnet_key, subnet_key, id }`
 - `nat_gateway.public_ip_addresses` → `{ keys, ids }`
+- `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, id }`
+- `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, id }`
 - `virtual_network_gateway.virtual_network_key` / `virtual_network_id` (flat fields — predates object convention)
 - `firewall.firewall_policy_key` / `firewall_policy_id` (flat fields — predates object convention)
 

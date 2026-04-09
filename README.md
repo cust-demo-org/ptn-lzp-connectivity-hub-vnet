@@ -347,16 +347,24 @@ map(object({
     firewall_policy_id  = optional(string)
     zones               = optional(set(string), ["1", "2", "3"])
     ip_configuration = optional(map(object({
-      name      = string
-      subnet_id = optional(string)
+      name = string
+      subnet = optional(object({
+        vnet_key   = optional(string)
+        subnet_key = optional(string)
+        id         = optional(string)
+      }))
       public_ip_address = optional(object({
         key = optional(string)
         id  = optional(string)
       }))
     })), {})
     management_ip_configuration = optional(object({
-      name      = string
-      subnet_id = string
+      name = string
+      subnet = object({
+        vnet_key   = optional(string)
+        subnet_key = optional(string)
+        id         = optional(string)
+      })
       public_ip_address = optional(object({
         key = optional(string)
         id  = optional(string)
@@ -1005,17 +1013,25 @@ map(object({
     sku                = optional(string, "ErGw1AZ")
     tags               = optional(map(string), {})
 
-    virtual_network_key               = optional(string)
-    virtual_network_id                = optional(string)
-    subnet_address_prefix             = optional(string, "")
-    subnet_creation_enabled           = optional(bool, true)
-    virtual_network_gateway_subnet_id = optional(string)
-    edge_zone                         = optional(string)
+    virtual_network_key     = optional(string)
+    virtual_network_id      = optional(string)
+    subnet_address_prefix   = optional(string, "")
+    subnet_creation_enabled = optional(bool, true)
+    gateway_subnet = optional(object({
+      id         = optional(string)
+      vnet_key   = optional(string)
+      subnet_key = optional(string)
+    }))
+    edge_zone = optional(string)
 
     ip_configurations = optional(map(object({
       name                          = optional(string, null)
       apipa_addresses               = optional(list(string), null)
       private_ip_address_allocation = optional(string, "Dynamic")
+      public_ip_address = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
       public_ip = optional(object({
         creation_enabled        = optional(bool, true)
         id                      = optional(string, null)

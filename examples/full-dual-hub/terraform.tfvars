@@ -167,16 +167,22 @@ firewalls = {
     zones               = ["1", "2", "3"]
     ip_configuration = {
       default = {
-        name      = "ipconfig-fw-internet"
-        subnet_id = "azurerm_subnet.vnet_internet_AzureFirewallSubnet.id"
+        name = "ipconfig-fw-internet"
+        subnet = {
+          vnet_key   = "vnet_internet"
+          subnet_key = "AzureFirewallSubnet"
+        }
         public_ip_address = {
           key = "pip_fw_internet"
         }
       }
     }
     management_ip_configuration = {
-      name      = "ipconfig-fw-mgmt-internet"
-      subnet_id = "azurerm_subnet.vnet_internet_AzureFirewallManagementSubnet.id"
+      name = "ipconfig-fw-mgmt-internet"
+      subnet = {
+        vnet_key   = "vnet_internet"
+        subnet_key = "AzureFirewallManagementSubnet"
+      }
       public_ip_address = {
         key = "pip_fw_mgmt_internet"
       }
@@ -191,16 +197,22 @@ firewalls = {
     zones               = ["1", "2", "3"]
     ip_configuration = {
       default = {
-        name      = "ipconfig-fw-intranet"
-        subnet_id = "azurerm_subnet.vnet_intranet_AzureFirewallSubnet.id"
+        name = "ipconfig-fw-intranet"
+        subnet = {
+          vnet_key   = "vnet_intranet"
+          subnet_key = "AzureFirewallSubnet"
+        }
         public_ip_address = {
           key = "pip_fw_intranet"
         }
       }
     }
     management_ip_configuration = {
-      name      = "ipconfig-fw-mgmt-intranet"
-      subnet_id = "azurerm_subnet.vnet_intranet_AzureFirewallManagementSubnet.id"
+      name = "ipconfig-fw-mgmt-intranet"
+      subnet = {
+        vnet_key   = "vnet_intranet"
+        subnet_key = "AzureFirewallManagementSubnet"
+      }
       public_ip_address = {
         key = "pip_fw_mgmt_intranet"
       }

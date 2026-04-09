@@ -17,6 +17,18 @@ locals {
   # VNet resource ID lookup: resolve virtual_network_key -> resource ID
   vnet_resource_ids = { for key, mod in module.virtual_network : key => mod.resource_id }
 
+  # Subnet resource ID lookup: resolve "vnet_key/subnet_key" -> subnet resource ID
+  subnet_resource_ids = {
+    for pair in flatten([
+      for vnet_key, mod in module.virtual_network : [
+        for subnet_key, subnet in mod.subnets : {
+          key         = "${vnet_key}/${subnet_key}"
+          resource_id = subnet.resource_id
+        }
+      ]
+    ]) : pair.key => pair.resource_id
+  }
+
   # Public IP resource ID lookup
   public_ip_resource_ids = { for key, mod in module.public_ip : key => mod.public_ip_id }
 

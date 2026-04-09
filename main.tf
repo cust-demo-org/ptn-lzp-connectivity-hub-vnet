@@ -290,13 +290,24 @@ module "virtual_network_gateway" {
   sku              = each.value.sku
   tags             = merge(var.tags, each.value.tags)
 
-  virtual_network_id                = each.value.virtual_network_key != null ? local.vnet_resource_ids[each.value.virtual_network_key] : each.value.virtual_network_id
-  subnet_address_prefix             = each.value.subnet_address_prefix
-  subnet_creation_enabled           = each.value.subnet_creation_enabled
-  virtual_network_gateway_subnet_id = each.value.virtual_network_gateway_subnet_id
-  edge_zone                         = each.value.edge_zone
+  virtual_network_id      = each.value.virtual_network_key != null ? local.vnet_resource_ids[each.value.virtual_network_key] : each.value.virtual_network_id
+  subnet_address_prefix   = each.value.subnet_address_prefix
+  subnet_creation_enabled = each.value.subnet_creation_enabled
+  virtual_network_gateway_subnet_id = each.value.gateway_subnet != null ? (
+    each.value.gateway_subnet.vnet_key != null && each.value.gateway_subnet.subnet_key != null ?
+    local.subnet_resource_ids["${each.value.gateway_subnet.vnet_key}/${each.value.gateway_subnet.subnet_key}"] :
+    each.value.gateway_subnet.id
+  ) : null
+  edge_zone = each.value.edge_zone
 
-  ip_configurations      = each.value.ip_configurations
+  ip_configurations = {
+    for k, v in each.value.ip_configurations : k => merge(v, {
+      public_ip = v.public_ip_address != null ? {
+        creation_enabled = false
+        id               = v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.id
+      } : v.public_ip
+    })
+  }
   local_network_gateways = each.value.local_network_gateways
   express_route_circuits = each.value.express_route_circuits
 
@@ -428,13 +439,13 @@ module "firewall" {
     for k, v in each.value.ip_configuration : k => {
       name                 = v.name
       public_ip_address_id = v.public_ip_address != null ? (v.public_ip_address.key != null ? local.public_ip_resource_ids[v.public_ip_address.key] : v.public_ip_address.id) : null
-      subnet_id            = v.subnet_id
+      subnet_id            = v.subnet != null ? (v.subnet.vnet_key != null && v.subnet.subnet_key != null ? local.subnet_resource_ids["${v.subnet.vnet_key}/${v.subnet.subnet_key}"] : v.subnet.id) : null
     }
   }
   firewall_management_ip_configuration = each.value.management_ip_configuration != null ? {
     name                 = each.value.management_ip_configuration.name
     public_ip_address_id = each.value.management_ip_configuration.public_ip_address != null ? (each.value.management_ip_configuration.public_ip_address.key != null ? local.public_ip_resource_ids[each.value.management_ip_configuration.public_ip_address.key] : each.value.management_ip_configuration.public_ip_address.id) : null
-    subnet_id            = each.value.management_ip_configuration.subnet_id
+    subnet_id            = each.value.management_ip_configuration.subnet.vnet_key != null && each.value.management_ip_configuration.subnet.subnet_key != null ? local.subnet_resource_ids["${each.value.management_ip_configuration.subnet.vnet_key}/${each.value.management_ip_configuration.subnet.subnet_key}"] : each.value.management_ip_configuration.subnet.id
   } : null
   firewall_private_ip_ranges = each.value.private_ip_ranges
   firewall_virtual_hub       = each.value.virtual_hub
