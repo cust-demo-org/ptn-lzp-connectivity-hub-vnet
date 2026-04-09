@@ -35,9 +35,11 @@ virtual_networks = {
     address_space      = ["10.0.0.0/16"]
     subnets = {
       snet_default = {
-        name                      = "snet-default"
-        address_prefixes          = ["10.0.1.0/24"]
-        network_security_group_key = "nsg_default"
+        name             = "snet-default"
+        address_prefixes = ["10.0.1.0/24"]
+        network_security_group = {
+          key = "nsg_default"
+        }
       }
       AzureFirewallSubnet = {
         name             = "AzureFirewallSubnet"
@@ -269,7 +271,9 @@ flowlog_configuration = {
     fl_hub_sea = {
       enabled  = true
       name     = "fl-hub-sea"
-      vnet_key = "hub_sea"
+      virtual_network = {
+        key = "hub_sea"
+      }
       retention_policy = {
         days    = 30
         enabled = true

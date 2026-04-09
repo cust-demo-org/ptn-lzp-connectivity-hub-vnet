@@ -70,7 +70,7 @@ Default: `false`
 
 ### <a name="input_firewall_policies"></a> [firewall\_policies](#input\_firewall\_policies)
 
-Description: Map of Azure Firewall Policies to create. Referenced by firewalls via firewall\_policy\_key. Refer to the main pattern module variable descriptions for complete details.
+Description: Map of Azure Firewall Policies to create. Referenced by firewalls via firewall\_policy = { key }. Refer to the main pattern module variable descriptions for complete details.
 
 Type: `any`
 

@@ -471,15 +471,21 @@ variable "virtual_networks" {
       sync_remote_address_space_triggers = optional(any, null)
     })), {})
     subnets = optional(map(object({
-      name                       = string
-      address_prefix             = optional(string)
-      address_prefixes           = optional(list(string))
-      network_security_group_key = optional(string)
-      network_security_group_id  = optional(string)
-      route_table_key            = optional(string)
-      route_table_id             = optional(string)
-      nat_gateway_key            = optional(string)
-      nat_gateway_id             = optional(string)
+      name             = string
+      address_prefix   = optional(string)
+      address_prefixes = optional(list(string))
+      network_security_group = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
+      route_table = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
+      nat_gateway = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
       service_endpoints_with_location = optional(list(object({
         service   = string
         locations = optional(list(string), ["*"])
@@ -608,8 +614,15 @@ variable "virtual_networks" {
       - `name` - (Required) The name of the subnet.
       - `address_prefix` - (Optional) The CIDR address prefix for the subnet. Mutually exclusive with `address_prefixes`.
       - `address_prefixes` - (Optional) A list of CIDR address prefixes for the subnet. Mutually exclusive with `address_prefix`.
-      - `network_security_group_key` - (Optional) The key of the NSG in the `network_security_groups` variable to associate with this subnet.
-      - `route_table_key` - (Optional) The key of the route table in the `route_tables` variable to associate with this subnet.
+      - `network_security_group` - (Optional) The network security group to associate with this subnet. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the NSG in the `network_security_groups` variable. **Pattern cross-reference**: resolves to the NSG resource ID via `local.nsg_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing NSG. Use this for externally-managed NSGs not created by this pattern.
+      - `route_table` - (Optional) The route table to associate with this subnet. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the route table in the `route_tables` variable. **Pattern cross-reference**: resolves to the route table resource ID via `local.rt_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing route table. Use this for externally-managed route tables not created by this pattern.
+      - `nat_gateway` - (Optional) The NAT gateway to associate with this subnet. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the NAT gateway in the `nat_gateways` variable. **Pattern cross-reference**: resolves to the NAT gateway resource ID via `local.nat_gateway_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing NAT gateway. Use this for externally-managed NAT gateways not created by this pattern.
       - `service_endpoints_with_location` - (Optional) A list of service endpoint configurations. Defaults to `[]`.
         - `service` - (Required) The service endpoint type (e.g., `"Microsoft.Storage"`).
         - `locations` - (Optional) A list of locations for the service endpoint. Defaults to `["*"]`.
@@ -617,8 +630,6 @@ variable "virtual_networks" {
         - `name` - (Required) The name of the delegation.
         - `service_delegation` - (Required) The service delegation configuration.
           - `name` - (Required) The name of the service to delegate to.
-      - `nat_gateway` - (Optional) NAT gateway configuration.
-        - `id` - (Required) The resource ID of the NAT gateway.
       - `service_endpoint_policies` - (Optional) A map of service endpoint policy IDs.
         - `id` - (Required) The resource ID of the service endpoint policy.
       - `ipam_pools` - (Optional) A list of IPAM pool configurations for subnet address allocation.
@@ -689,9 +700,11 @@ variable "private_dns_zones" {
     domain_name        = string
     resource_group_key = string
     virtual_network_links = optional(map(object({
-      name                                   = string
-      virtual_network_key                    = optional(string)
-      virtual_network_id                     = optional(string)
+      name = string
+      virtual_network = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
       registration_enabled                   = optional(bool, false)
       resolution_policy                      = optional(string, "Default")
       private_dns_zone_supports_private_link = optional(bool, false)
@@ -723,7 +736,9 @@ variable "private_dns_zones" {
     - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this DNS zone will be deployed.
     - `virtual_network_links` - (Optional) A map of VNet links to create for this DNS zone. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
       - `name` - (Required) The name of the virtual network link.
-      - `virtual_network_key` - (Required) The key of the virtual network in the `virtual_networks` variable to link to this DNS zone.
+      - `virtual_network` - (Optional) The virtual network to link to this DNS zone. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
       - `registration_enabled` - (Optional) Whether auto-registration of VM DNS records is enabled for this link. Defaults to `false`.
       - `resolution_policy` - (Optional) The resolution policy for the link. Defaults to `"Default"`.
       - `private_dns_zone_supports_private_link` - (Optional) Whether the DNS zone supports private link resolution. Defaults to `false`.
@@ -762,10 +777,12 @@ variable "private_dns_zones" {
 
 variable "byo_private_dns_zone_links" {
   type = map(object({
-    name                                   = string
-    private_dns_zone_id                    = string
-    virtual_network_key                    = optional(string)
-    virtual_network_id                     = optional(string)
+    name                = string
+    private_dns_zone_id = string
+    virtual_network = optional(object({
+      key = optional(string)
+      id  = optional(string)
+    }))
     registration_enabled                   = optional(bool, false)
     resolution_policy                      = optional(string, "Default")
     private_dns_zone_supports_private_link = optional(bool, false)
@@ -777,7 +794,9 @@ variable "byo_private_dns_zone_links" {
 
     - `name` - (Required) The name of the virtual network link.
     - `private_dns_zone_id` - (Required) The Azure resource ID of the existing Private DNS Zone to link.
-    - `virtual_network_key` - (Required) The key of the virtual network in the `virtual_networks` variable to link to the DNS zone.
+    - `virtual_network` - (Optional) The virtual network to link to the DNS zone. Provide exactly one of `key` or `id`.
+      - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+      - `id` - (Optional) The resource ID of an existing virtual network to link. Use this for externally-managed VNets not created by this pattern.
     - `registration_enabled` - (Optional) Whether auto-registration of DNS records is enabled for this link. Defaults to `false`.
     - `resolution_policy` - (Optional) The resolution policy for the link. Defaults to `"Default"`.
     - `private_dns_zone_supports_private_link` - (Optional) Whether the DNS zone supports private link resolution. Defaults to `false`.
@@ -786,102 +805,6 @@ variable "byo_private_dns_zone_links" {
     > **Pattern note:** Use this variable for DNS zones NOT managed by this pattern. For creating DNS zones as part of this pattern, use `private_dns_zones` instead. Tags in `tags` are merged with `var.tags`.
   EOT
 }
-
-
-variable "flowlog_configuration" {
-  type = object({
-    network_watcher_id   = optional(string)
-    network_watcher_name = optional(string)
-    resource_group_name  = optional(string)
-    location             = optional(string)
-    flow_logs = optional(map(object({
-      enabled            = bool
-      name               = string
-      vnet_key           = optional(string)
-      vnet_id            = optional(string)
-      storage_account_id = string
-      retention_policy = object({
-        days    = number
-        enabled = bool
-      })
-      traffic_analytics = optional(object({
-        enabled               = bool
-        interval_in_minutes   = optional(number)
-        workspace_id          = optional(string)
-        workspace_region      = optional(string)
-        workspace_resource_id = optional(string)
-      }))
-      version = optional(number)
-    })), null)
-    lock = optional(object({
-      kind = string
-      name = optional(string, null)
-    }))
-    role_assignments = optional(map(object({
-      role_definition_id_or_name             = string
-      principal_id                           = optional(string)
-      assign_to_caller                       = optional(bool, false)
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      condition                              = optional(string, null)
-      condition_version                      = optional(string, null)
-      delegated_managed_identity_resource_id = optional(string, null)
-      principal_type                         = optional(string, null)
-    })), {})
-    tags = optional(map(string), {})
-  })
-  default     = null
-  description = <<-EOT
-    Network Watcher and VNet flow log configuration. When `null` (the default), no Network Watcher or flow logs are configured.
-
-    - `network_watcher_id` - (Optional) The resource ID of an existing Network Watcher.
-    - `network_watcher_name` - (Optional) The name of an existing Network Watcher.
-    - `resource_group_name` - (Optional) The name of the resource group containing the Network Watcher.
-    - `location` - (Optional) The Azure region for the Network Watcher. Defaults to `null`.
-    - `flow_logs` - (Optional) A map of flow logs to create for the Network Watcher. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `null`.
-      - `enabled` - (Required) Whether Network Flow Logging should be enabled.
-      - `name` - (Required) The name of the Network Watcher Flow Log. Changing this forces a new resource to be created.
-      - `vnet_key` - (Required) The key of the virtual network in the `hub_virtual_networks` variable for which to enable flow logs.
-      - `storage_account_id` - (Required) The resource ID of the storage account for flow log data.
-      - `retention_policy` - (Required) The retention policy for flow log records.
-        - `days` - (Required) The number of days to retain flow log records.
-        - `enabled` - (Required) Whether retention is enabled.
-      - `traffic_analytics` - (Optional) Traffic analytics configuration.
-        - `enabled` - (Required) Whether traffic analytics is enabled.
-        - `interval_in_minutes` - (Optional) How frequently service should do flow analytics in minutes.
-        - `workspace_id` - (Optional) The resource GUID of the attached workspace.
-        - `workspace_region` - (Optional) The location of the attached workspace.
-        - `workspace_resource_id` - (Optional) The resource ID of the attached workspace.
-      - `version` - (Optional) The version (revision) of the flow log. Possible values are `1` and `2`.
-    - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
-      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
-      - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
-    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign to the principal.
-      - `principal_id` - (Optional) The ID of the principal to assign the role to. Mutually exclusive with `assign_to_caller`.
-      - `assign_to_caller` - (Optional) When `true`, automatically uses the object ID of the identity running Terraform as the principal. Mutually exclusive with `principal_id`. Defaults to `false`.
-      - `description` - (Optional) The description of the role assignment.
-      - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to `false`.
-      - `condition` - (Optional) The condition which will be used to scope the role assignment.
-      - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
-      - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
-      - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
-
-      > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
-
-    - `tags` - (Optional) Tags to apply to the Network Watcher. Defaults to `{}`.
-
-    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`. If `network_watcher_id`, `network_watcher_name`, and `resource_group_name` are not specified, defaults to the Azure auto-created `NetworkWatcher_<location>` in `NetworkWatcherRG`.
-  EOT
-
-  validation {
-    condition = var.flowlog_configuration == null ? true : alltrue([
-      for ra_key, ra in var.flowlog_configuration.role_assignments : ((ra.principal_id != null ? 1 : 0) + (ra.assign_to_caller ? 1 : 0)) == 1
-    ])
-    error_message = "Each flowlog configuration role assignment must set exactly one of principal_id or assign_to_caller."
-  }
-}
-
 variable "public_ips" {
   type = map(object({
     name                    = string
@@ -931,28 +854,54 @@ variable "public_ips" {
   }))
   default     = {}
   description = <<-EOT
-    A map of public IP addresses to create. Referenced by firewalls, bastions, and gateways.
+    A map of public IP addresses to create. Referenced by firewalls and virtual network gateways via `public_ip_address.key`.
 
-    - `name` - (Required) The name of the public IP address.
-    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable.
-    - `location` - (Optional) The Azure region. Defaults to `var.location`.
-    - `allocation_method` - (Optional) The allocation method. Defaults to `"Static"`.
-    - `sku` - (Optional) The SKU. Defaults to `"Standard"`.
-    - `sku_tier` - (Optional) The SKU tier. Defaults to `"Regional"`.
-    - `zones` - (Optional) Availability zones. Defaults to `[1, 2, 3]`.
-    - `ip_version` - (Optional) The IP version. Defaults to `"IPv4"`.
-    - `domain_name_label` - (Optional) The domain name label.
-    - `ddos_protection_mode` - (Optional) DDoS protection mode. Defaults to `"VirtualNetworkInherited"`.
-    - `ddos_protection_plan_id` - (Optional) DDoS protection plan resource ID.
-    - `idle_timeout_in_minutes` - (Optional) Idle timeout. Defaults to `4`.
-    - `ip_tags` - (Optional) IP tags. Defaults to `{}`.
-    - `public_ip_prefix_id` - (Optional) Public IP prefix resource ID.
-    - `reverse_fqdn` - (Optional) Reverse FQDN.
-    - `edge_zone` - (Optional) Edge zone.
-    - `tags` - (Optional) Tags. Defaults to `{}`.
-    - `lock` - (Optional) Resource lock configuration.
-    - `role_assignments` - (Optional) RBAC role assignments.
-    - `diagnostic_settings` - (Optional) Diagnostic settings.
+    - `name` - (Required) The name of the public IP address. Changing this forces a new resource to be created.
+    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this public IP will be deployed. **Pattern cross-reference**: resolves to the resource group name via `var.resource_groups`.
+    - `location` - (Optional) The Azure region for the public IP. Defaults to `var.location`.
+    - `allocation_method` - (Optional) The allocation method. Possible values are `Static` and `Dynamic`. Defaults to `"Static"`.
+    - `sku` - (Optional) The SKU of the public IP address. Possible values are `Basic` and `Standard`. Defaults to `"Standard"`.
+    - `sku_tier` - (Optional) The tier of the SKU. Possible values are `Regional` and `Global`. Defaults to `"Regional"`.
+    - `zones` - (Optional) A set of availability zones for the public IP. Defaults to `[1, 2, 3]`.
+    - `ip_version` - (Optional) The IP version. Possible values are `IPv4` and `IPv6`. Defaults to `"IPv4"`.
+    - `domain_name_label` - (Optional) The domain name label for the public IP address.
+    - `ddos_protection_mode` - (Optional) The DDoS protection mode. Possible values are `Disabled`, `Enabled` and `VirtualNetworkInherited`. Defaults to `"VirtualNetworkInherited"`.
+    - `ddos_protection_plan_id` - (Optional) The resource ID of the DDoS protection plan. Required if `ddos_protection_mode` is set to `Enabled`.
+    - `idle_timeout_in_minutes` - (Optional) The idle timeout in minutes. Defaults to `4`.
+    - `ip_tags` - (Optional) A map of IP tags for the public IP address. Defaults to `{}`.
+    - `public_ip_prefix_id` - (Optional) The resource ID of a public IP prefix to allocate the address from.
+    - `reverse_fqdn` - (Optional) The reverse FQDN for the public IP address. If specified, a DNS name label cannot also be set. Not all regions support this.
+    - `edge_zone` - (Optional) The edge zone to use for the public IP address.
+    - `tags` - (Optional) Tags to apply to this public IP. Defaults to `{}`.
+    - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
+      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+      - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign to the principal.
+      - `principal_id` - (Optional) The ID of the principal to assign the role to. Mutually exclusive with `assign_to_caller`.
+      - `assign_to_caller` - (Optional) When `true`, automatically uses the object ID of the identity running Terraform as the principal. Mutually exclusive with `principal_id`. Defaults to `false`.
+      - `description` - (Optional) The description of the role assignment.
+      - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to `false`.
+      - `condition` - (Optional) The condition which will be used to scope the role assignment.
+      - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+      - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+      - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
+      > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+
+    - `diagnostic_settings` - (Optional) A map of diagnostic settings to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`.
   EOT
 }
 
@@ -1055,42 +1004,108 @@ variable "firewall_policies" {
   }))
   default     = {}
   description = <<-EOT
-    A map of Azure Firewall Policies to create.
+    A map of Azure Firewall Policies to create. Referenced by firewalls via `firewall_policy = { key }`.
 
-    - `name` - (Required) The name of the firewall policy.
-    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable.
-    - `location` - (Optional) The Azure region. Defaults to `var.location`.
-    - `sku` - (Optional) The SKU tier. Possible values are `Standard`, `Premium`, and `Basic`.
-    - `base_policy_id` - (Optional) The resource ID of a parent firewall policy.
-    - `auto_learn_private_ranges_enabled` - (Optional) Whether to auto-learn private ranges.
-    - `dns` - (Optional) DNS settings for the policy.
-    - `explicit_proxy` - (Optional) Explicit proxy settings.
-    - `identity` - (Optional) Managed identity configuration.
+    - `name` - (Required) The name which should be used for this Firewall Policy. Changing this forces a new Firewall Policy to be created.
+    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this policy will be deployed. **Pattern cross-reference**: resolves to the resource group name via `var.resource_groups`.
+    - `location` - (Optional) The Azure region for the firewall policy. Defaults to `var.location`.
+    - `sku` - (Optional) The SKU Tier of the Firewall Policy. Possible values are `Standard`, `Premium` and `Basic`. Changing this forces a new Firewall Policy to be created.
+    - `base_policy_id` - (Optional) The resource ID of a parent (base) Firewall Policy from which to inherit rules.
+    - `auto_learn_private_ranges_enabled` - (Optional) Whether to automatically learn private IP ranges. Not compatible with `private_ip_ranges`.
+    - `dns` - (Optional) DNS settings for the firewall policy.
+      - `proxy_enabled` - (Optional) Whether to enable DNS proxy on Firewalls attached to this Firewall Policy. Defaults to `false`.
+      - `servers` - (Optional) A list of custom DNS servers' IP addresses.
+    - `explicit_proxy` - (Optional) Explicit proxy configuration for the firewall policy.
+      - `enable_pac_file` - (Optional) Whether the PAC file port and URL need to be provided.
+      - `enabled` - (Optional) Whether the explicit proxy is enabled for this Firewall Policy.
+      - `http_port` - (Optional) The port number for explicit HTTP protocol.
+      - `https_port` - (Optional) The port number for explicit proxy HTTPS protocol.
+      - `pac_file` - (Optional) Specifies a SAS URL for the PAC file.
+      - `pac_file_port` - (Optional) Specifies a port number for the firewall to serve the PAC file.
+    - `identity` - (Optional) Managed identity configuration for the firewall policy.
+      - `type` - (Required) The type of Managed Service Identity. Only possible value is `UserAssigned`.
+      - `identity_ids` - (Optional) A set of User Assigned Managed Identity IDs to be assigned to this Firewall Policy.
     - `insights` - (Optional) Policy insights and analytics configuration.
-    - `intrusion_detection` - (Optional) IDPS configuration.
-    - `private_ip_ranges` - (Optional) A list of SNAT private IP ranges.
-    - `sql_redirect_allowed` - (Optional) Whether SQL redirect is allowed.
-    - `threat_intelligence_mode` - (Optional) Threat intelligence mode.
-    - `threat_intelligence_allowlist` - (Optional) Threat intelligence allowlist.
-    - `tls_certificate` - (Optional) TLS inspection certificate configuration.
-    - `timeouts` - (Optional) Timeout durations for resource operations.
-    - `tags` - (Optional) Tags. Defaults to `{}`.
-    - `lock` - (Optional) Resource lock configuration.
-    - `role_assignments` - (Optional) RBAC role assignments.
-    - `diagnostic_settings` - (Optional) Diagnostic settings.
+      - `default_log_analytics_workspace_id` - (Required) The ID of the default Log Analytics Workspace that Firewalls associated with this policy will send their logs to, when there is no location match in `log_analytics_workspace`.
+      - `enabled` - (Required) Whether the insights functionality is enabled for this Firewall Policy.
+      - `retention_in_days` - (Optional) The log retention period in days.
+      - `log_analytics_workspace` - (Optional) A list of Log Analytics Workspace overrides by firewall location.
+        - `firewall_location` - (Required) The location of the Firewalls that should use this workspace.
+        - `id` - (Required) The ID of the Log Analytics Workspace for firewalls matching `firewall_location`.
+    - `intrusion_detection` - (Optional) Intrusion Detection and Prevention System (IDPS) configuration.
+      - `mode` - (Optional) The IDPS mode. Possible values are `Off`, `Alert` or `Deny`.
+      - `private_ranges` - (Optional) A list of private IP address ranges to identify traffic direction. By default, only IANA RFC 1918 ranges are considered private.
+      - `signature_overrides` - (Optional) A list of IDPS signature overrides.
+        - `id` - (Optional) The 12-digit number identifying the signature.
+        - `state` - (Optional) The state for this signature. Possible values are `Off`, `Alert` or `Deny`.
+      - `traffic_bypass` - (Optional) A list of traffic bypass rules for IDPS.
+        - `name` - (Required) The name of this bypass traffic setting.
+        - `protocol` - (Required) The protocol to bypass. Possible values are `ANY`, `TCP`, `ICMP`, `UDP`.
+        - `description` - (Optional) A description for this bypass traffic setting.
+        - `destination_addresses` - (Optional) A set of destination IP addresses to bypass.
+        - `destination_ip_groups` - (Optional) A set of destination IP groups to bypass.
+        - `destination_ports` - (Optional) A set of destination ports to bypass.
+        - `source_addresses` - (Optional) A set of source addresses to bypass.
+        - `source_ip_groups` - (Optional) A set of source IP groups to bypass.
+    - `private_ip_ranges` - (Optional) A list of SNAT private CIDR IP ranges. Not compatible with `auto_learn_private_ranges_enabled`.
+    - `sql_redirect_allowed` - (Optional) Whether SQL redirect traffic filtering is allowed.
+    - `threat_intelligence_mode` - (Optional) The operation mode for Threat Intelligence. Possible values are `Alert`, `Deny` and `Off`. Defaults to `Alert`.
+    - `threat_intelligence_allowlist` - (Optional) Threat intelligence allowlist configuration.
+      - `fqdns` - (Optional) A set of FQDNs that will be skipped for threat detection.
+      - `ip_addresses` - (Optional) A set of IP addresses or CIDR ranges that will be skipped for threat detection.
+    - `tls_certificate` - (Optional) TLS inspection certificate configuration for decrypting traffic.
+      - `key_vault_secret_id` - (Required) The ID of the Key Vault secret or certificate containing the TLS certificate.
+      - `name` - (Required) The name of the certificate.
+    - `timeouts` - (Optional) An object defining timeout durations for resource operations.
+      - `create` - (Optional) Used when creating the Firewall Policy. Defaults to 30 minutes.
+      - `delete` - (Optional) Used when deleting the Firewall Policy. Defaults to 30 minutes.
+      - `read` - (Optional) Used when retrieving the Firewall Policy. Defaults to 5 minutes.
+      - `update` - (Optional) Used when updating the Firewall Policy. Defaults to 30 minutes.
+    - `tags` - (Optional) Tags to apply to this firewall policy. Defaults to `{}`.
+    - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
+      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+      - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign to the principal.
+      - `principal_id` - (Optional) The ID of the principal to assign the role to. Mutually exclusive with `assign_to_caller`.
+      - `assign_to_caller` - (Optional) When `true`, automatically uses the object ID of the identity running Terraform as the principal. Mutually exclusive with `principal_id`. Defaults to `false`.
+      - `description` - (Optional) The description of the role assignment.
+      - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to `false`.
+      - `condition` - (Optional) The condition which will be used to scope the role assignment.
+      - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+      - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+      - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
+      > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+
+    - `diagnostic_settings` - (Optional) A map of diagnostic settings to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`.
   EOT
 }
 
 variable "firewalls" {
   type = map(object({
-    name                = string
-    resource_group_key  = string
-    location            = optional(string)
-    sku_name            = string
-    sku_tier            = string
-    firewall_policy_key = optional(string)
-    firewall_policy_id  = optional(string)
-    zones               = optional(set(string), ["1", "2", "3"])
+    name               = string
+    resource_group_key = string
+    location           = optional(string)
+    sku_name           = string
+    sku_tier           = string
+    firewall_policy = optional(object({
+      key = optional(string)
+      id  = optional(string)
+    }))
+    zones = optional(set(string), ["1", "2", "3"])
     ip_configuration = optional(map(object({
       name = string
       subnet = optional(object({
@@ -1159,23 +1174,72 @@ variable "firewalls" {
   description = <<-EOT
     A map of Azure Firewalls to create.
 
-    - `name` - (Required) The name of the firewall.
-    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable.
-    - `location` - (Optional) The Azure region. Defaults to `var.location`.
-    - `sku_name` - (Required) The SKU name. Possible values are `AZFW_Hub` and `AZFW_VNet`.
-    - `sku_tier` - (Required) The SKU tier. Possible values are `Premium`, `Standard`, and `Basic`.
-    - `firewall_policy_key` - (Optional) Key into `firewall_policies` variable. Mutually exclusive with `firewall_policy_id`.
-    - `firewall_policy_id` - (Optional) Direct resource ID of a firewall policy. Mutually exclusive with `firewall_policy_key`.
-    - `zones` - (Optional) Availability zones. Defaults to `["1", "2", "3"]`.
-    - `ip_configuration` - (Optional) IP configurations for the firewall.
-    - `management_ip_configuration` - (Optional) Management IP configuration.
-    - `private_ip_ranges` - (Optional) SNAT private IP ranges.
-    - `virtual_hub` - (Optional) Virtual Hub configuration for `AZFW_Hub` SKU.
-    - `timeouts` - (Optional) Timeout durations.
-    - `tags` - (Optional) Tags. Defaults to `{}`.
-    - `lock` - (Optional) Resource lock configuration.
-    - `role_assignments` - (Optional) RBAC role assignments.
-    - `diagnostic_settings` - (Optional) Diagnostic settings.
+    - `name` - (Required) Specifies the name of the Firewall. Changing this forces a new resource to be created.
+    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this firewall will be deployed. **Pattern cross-reference**: resolves to the resource group name via `var.resource_groups`.
+    - `location` - (Optional) The Azure region for the firewall. Defaults to `var.location`.
+    - `sku_name` - (Required) SKU name of the Firewall. Possible values are `AZFW_Hub` and `AZFW_VNet`. Changing this forces a new resource to be created.
+    - `sku_tier` - (Required) SKU tier of the Firewall. Possible values are `Premium`, `Standard` and `Basic`.
+    - `firewall_policy` - (Optional) The firewall policy to associate with this firewall. Provide exactly one of `key` or `id`.
+      - `key` - (Optional) The key of the firewall policy in the `firewall_policies` variable. **Pattern cross-reference**: resolves to the firewall policy resource ID via `local.firewall_policy_resource_ids`.
+      - `id` - (Optional) The resource ID of an existing firewall policy. Use this for externally-managed firewall policies not created by this pattern.
+    - `zones` - (Optional) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created. Defaults to `["1", "2", "3"]`.
+    - `ip_configuration` - (Optional) A map of IP configurations for the firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`. The first `ip_configuration` with a `subnet` reference is used as the primary configuration and determines the firewall's private IP.
+      - `name` - (Required) Specifies the name of the IP Configuration.
+      - `subnet` - (Optional) The subnet to associate with this IP configuration. Only the first IP configuration should reference a subnet (must be named `AzureFirewallSubnet`). Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
+        - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
+        - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
+        - `id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
+      - `public_ip_address` - (Optional) The public IP address to associate with this IP configuration. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+    - `management_ip_configuration` - (Optional) A management IP configuration block for forced tunnelling scenarios. Required when the `sku_tier` is `Basic`. The subnet must be named `AzureFirewallManagementSubnet`.
+      - `name` - (Required) Specifies the name of the IP Configuration.
+      - `subnet` - (Required) The subnet to associate with this management IP configuration (must be named `AzureFirewallManagementSubnet`). Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
+        - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
+        - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
+        - `id` - (Optional) The resource ID of an existing subnet. Use this for externally-managed subnets not created by this pattern.
+      - `public_ip_address` - (Optional) The public IP address to associate with this management IP configuration. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+    - `private_ip_ranges` - (Optional) A list of SNAT private CIDR IP ranges, or the special string `IANAPrivateRanges`, which indicates Azure Firewall does not SNAT when the destination IP address is a private range per IANA RFC 1918.
+    - `virtual_hub` - (Optional) Virtual Hub configuration for `AZFW_Hub` SKU firewalls.
+      - `virtual_hub_id` - (Required) Specifies the ID of the Virtual Hub where the Firewall resides in.
+      - `public_ip_count` - (Optional) Specifies the number of public IPs to assign to the Firewall. Defaults to `1`.
+    - `timeouts` - (Optional) An object defining timeout durations for resource operations.
+      - `create` - (Optional) Used when creating the Firewall. Defaults to 90 minutes.
+      - `delete` - (Optional) Used when deleting the Firewall. Defaults to 90 minutes.
+      - `read` - (Optional) Used when retrieving the Firewall. Defaults to 5 minutes.
+      - `update` - (Optional) Used when updating the Firewall. Defaults to 90 minutes.
+    - `tags` - (Optional) Tags to apply to this firewall. Defaults to `{}`.
+    - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
+      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+      - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign to the principal.
+      - `principal_id` - (Optional) The ID of the principal to assign the role to. Mutually exclusive with `assign_to_caller`.
+      - `assign_to_caller` - (Optional) When `true`, automatically uses the object ID of the identity running Terraform as the principal. Mutually exclusive with `principal_id`. Defaults to `false`.
+      - `description` - (Optional) The description of the role assignment.
+      - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to `false`.
+      - `condition` - (Optional) The condition which will be used to scope the role assignment.
+      - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+      - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+      - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
+      > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+
+    - `diagnostic_settings` - (Optional) A map of diagnostic settings to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`.
   EOT
 }
 
@@ -1188,8 +1252,10 @@ variable "virtual_network_gateways" {
     sku                = optional(string, "ErGw1AZ")
     tags               = optional(map(string), {})
 
-    virtual_network_key     = optional(string)
-    virtual_network_id      = optional(string)
+    virtual_network = optional(object({
+      key = optional(string)
+      id  = optional(string)
+    }))
     subnet_address_prefix   = optional(string, "")
     subnet_creation_enabled = optional(bool, true)
     gateway_subnet = optional(object({
@@ -1414,28 +1480,298 @@ variable "virtual_network_gateways" {
   description = <<-EOT
     A map of virtual network gateways (VPN/ExpressRoute) to create.
 
-    - `name` - (Required) The name of the Virtual Network Gateway.
-    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable.
-    - `location` - (Optional) The Azure region. Defaults to `var.location`.
-    - `type` - (Optional) The type of gateway. Possible values are `ExpressRoute` or `Vpn`. Defaults to `"ExpressRoute"`.
-    - `sku` - (Optional) The SKU of the gateway. Defaults to `"ErGw1AZ"`.
-    - `virtual_network_key` - (Optional) Key into `virtual_networks` variable. Mutually exclusive with `virtual_network_id`.
-    - `virtual_network_id` - (Optional) Direct resource ID. Mutually exclusive with `virtual_network_key`.
-    - `subnet_address_prefix` - (Optional) The address prefix for the GatewaySubnet.
-    - `subnet_creation_enabled` - (Optional) Whether to create a GatewaySubnet. Defaults to `true`.
-    - `virtual_network_gateway_subnet_id` - (Optional) Existing GatewaySubnet resource ID.
-    - `edge_zone` - (Optional) The edge zone.
-    - `ip_configurations` - (Optional) Map of IP configurations.
-    - `local_network_gateways` - (Optional) Map of local network gateways with connections.
-    - `express_route_circuits` - (Optional) Map of ExpressRoute circuits with connections and peering.
-    - `express_route_remote_vnet_traffic_enabled` - (Optional) Defaults to `false`.
-    - `express_route_virtual_wan_traffic_enabled` - (Optional) Defaults to `false`.
-    - `hosted_on_behalf_of_public_ip_enabled` - (Optional) Defaults to `false`.
-    - `vpn_*` - (Optional) VPN-specific settings (active-active, BGP, point-to-site, etc.).
-    - `route_table_*` - (Optional) Route table settings for the gateway subnet.
-    - `retry` - (Optional) Retry configuration for transient errors.
-    - `timeouts` - (Optional) Timeout durations.
-    - `diagnostic_settings` - (Optional) Diagnostic settings.
-    - `tags` - (Optional) Tags. Defaults to `{}`.
+    - `name` - (Required) The name of the Virtual Network Gateway. Changing this forces a new resource to be created.
+    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this gateway will be deployed. **Pattern cross-reference**: resolves to the resource group resource ID via `var.resource_groups`.
+    - `location` - (Optional) The Azure region for the gateway. Defaults to `var.location`.
+    - `type` - (Optional) The type of the Virtual Network Gateway. Possible values are `ExpressRoute` or `Vpn`. Defaults to `"ExpressRoute"`.
+    - `sku` - (Optional) The SKU (size) of the Virtual Network Gateway. Possible values include `Basic`, `Standard`, `HighPerformance`, `UltraPerformance`, `VpnGw1`–`VpnGw5`, `VpnGw1AZ`–`VpnGw5AZ`, `ErGw1AZ`–`ErGw3AZ`. Defaults to `"ErGw1AZ"`.
+    - `tags` - (Optional) Tags to apply to this gateway. Defaults to `{}`.
+    - `virtual_network` - (Optional) The virtual network to attach this gateway to. Provide exactly one of `key` or `id`.
+      - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+      - `id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+    - `subnet_address_prefix` - (Optional) The address prefix for the GatewaySubnet. Required if `subnet_creation_enabled = true`. Defaults to `""`.
+    - `subnet_creation_enabled` - (Optional) Whether to create a GatewaySubnet within the referenced virtual network. Defaults to `true`.
+    - `gateway_subnet` - (Optional) Reference to an existing GatewaySubnet. Used when `subnet_creation_enabled = false`. Provide exactly one of `id` or (`vnet_key` + `subnet_key`).
+      - `id` - (Optional) The resource ID of an existing GatewaySubnet. Use this for externally-managed subnets not created by this pattern.
+      - `vnet_key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: combined with `subnet_key` to resolve the subnet resource ID via `local.subnet_resource_ids["vnet_key/subnet_key"]`.
+      - `subnet_key` - (Optional) The key of the subnet within the referenced virtual network. Used together with `vnet_key`.
+    - `edge_zone` - (Optional) Specifies the Edge Zone within the Azure Region where this Virtual Network Gateway should exist. Changing this forces a new resource to be created.
+    - `ip_configurations` - (Optional) A map of IP configurations for the Virtual Network Gateway. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
+      - `name` - (Optional) The name of the IP Configuration.
+      - `apipa_addresses` - (Optional) A list of APIPA (Automatic Private IP Addressing) addresses for BGP peering.
+      - `private_ip_address_allocation` - (Optional) The private IP allocation method. Possible values are `Static` or `Dynamic`. Defaults to `"Dynamic"`.
+      - `public_ip_address` - (Optional) Reference to a pattern-managed or external public IP address. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the public IP in the `public_ips` variable. **Pattern cross-reference**: resolves to the public IP resource ID via `local.public_ip_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing public IP address. Use this for externally-managed public IPs not created by this pattern.
+      - `public_ip` - (Optional) Configuration for a public IP created and managed by the gateway sub-module itself (not via the pattern's `public_ips` variable). Use this when you want the gateway sub-module to create and manage the public IP lifecycle directly. Defaults to creating a Standard, Static, zone-redundant public IP.
+        - `creation_enabled` - (Optional) Whether to create a new public IP for this IP configuration. Defaults to `true`. Set to `false` and provide `id` to use an existing public IP.
+        - `id` - (Optional) The resource ID of an existing public IP to use when `creation_enabled` is `false`.
+        - `name` - (Optional) The name of the public IP address to create.
+        - `resource_group_name` - (Optional) The resource group for the public IP. Defaults to the gateway's resource group.
+        - `allocation_method` - (Optional) The allocation method. Defaults to `"Static"`.
+        - `sku` - (Optional) The SKU. Defaults to `"Standard"`.
+        - `tags` - (Optional) Tags to apply. Defaults to `{}`.
+        - `zones` - (Optional) Availability zones. Defaults to `[1, 2, 3]`.
+        - `edge_zone` - (Optional) The edge zone. Changing this forces recreation.
+        - `ddos_protection_mode` - (Optional) DDoS protection mode. Defaults to `"VirtualNetworkInherited"`.
+        - `ddos_protection_plan_id` - (Optional) DDoS protection plan resource ID.
+        - `domain_name_label` - (Optional) The domain name label.
+        - `idle_timeout_in_minutes` - (Optional) Idle timeout in minutes.
+        - `ip_tags` - (Optional) IP tags. Defaults to `{}`.
+        - `ip_version` - (Optional) IP version. Defaults to `"IPv4"`.
+        - `public_ip_prefix_id` - (Optional) Public IP prefix resource ID.
+        - `reverse_fqdn` - (Optional) Reverse FQDN.
+        - `sku_tier` - (Optional) SKU tier. Defaults to `"Regional"`.
+    - `local_network_gateways` - (Optional) A map of Local Network Gateways and their Virtual Network Gateway Connections. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
+      - `id` - (Optional) The resource ID of an existing Local Network Gateway. When specified, the other gateway properties (`name`, `address_space`, `gateway_fqdn`, `gateway_address`, `bgp_settings`, `tags`) are ignored.
+      - `name` - (Optional) The name of the Local Network Gateway to create.
+      - `resource_group_name` - (Optional) The resource group for the Local Network Gateway.
+      - `address_space` - (Optional) A list of address spaces for the Local Network Gateway.
+      - `gateway_fqdn` - (Optional) The gateway FQDN for the Local Network Gateway. Mutually exclusive with `gateway_address`.
+      - `gateway_address` - (Optional) The gateway IP address for the Local Network Gateway. Mutually exclusive with `gateway_fqdn`.
+      - `tags` - (Optional) Tags to apply. Defaults to `{}`.
+      - `bgp_settings` - (Optional) BGP settings for the Local Network Gateway.
+        - `asn` - (Required) The ASN of the Local Network Gateway.
+        - `bgp_peering_address` - (Required) The BGP peering address.
+        - `peer_weight` - (Optional) The weight added to routes learned from this BGP speaker.
+      - `connection` - (Optional) Virtual Network Gateway Connection settings.
+        - `name` - (Optional) The name of the connection.
+        - `resource_group_name` - (Optional) The resource group for the connection.
+        - `type` - (Required) The connection type. Possible values are `IPsec` or `Vnet2Vnet`.
+        - `connection_mode` - (Optional) The connection mode.
+        - `connection_protocol` - (Optional) The protocol. Possible values are `IKEv2` or `IKEv1`.
+        - `dpd_timeout_seconds` - (Optional) Dead peer detection timeout in seconds.
+        - `egress_nat_rule_ids` - (Optional) A list of egress NAT rule IDs.
+        - `enable_bgp` - (Optional) Whether BGP is enabled for this connection.
+        - `ingress_nat_rule_ids` - (Optional) A list of ingress NAT rule IDs.
+        - `local_azure_ip_address_enabled` - (Optional) Whether the local Azure IP address is enabled.
+        - `peer_virtual_network_gateway_id` - (Optional) The ID of the peer Virtual Network Gateway.
+        - `routing_weight` - (Optional) The routing weight.
+        - `shared_key` - (Optional) The shared key for the connection.
+        - `tags` - (Optional) Tags to apply.
+        - `use_policy_based_traffic_selectors` - (Optional) Whether to use policy-based traffic selectors.
+        - `custom_bgp_addresses` - (Optional) Custom BGP addresses for the connection.
+          - `primary` - (Required) The primary custom BGP address.
+          - `secondary` - (Required) The secondary custom BGP address.
+        - `ipsec_policy` - (Optional) IPsec policy for the connection.
+          - `dh_group` - (Required) The DH Group used in IKE Phase 1 for initial SA.
+          - `ike_encryption` - (Required) The IKE encryption algorithm (IKE phase 2).
+          - `ike_integrity` - (Required) The IKE integrity algorithm (IKE phase 2).
+          - `ipsec_encryption` - (Required) The IPSec encryption algorithm (IKE phase 1).
+          - `ipsec_integrity` - (Required) The IPSec integrity algorithm (IKE phase 1).
+          - `pfs_group` - (Required) The Pfs Group used in IKE Phase 2 for new child SA.
+          - `sa_datasize` - (Optional) The IPSec SA data size in KB.
+          - `sa_lifetime` - (Optional) The IPSec SA lifetime in seconds.
+        - `traffic_selector_policy` - (Optional) A list of traffic selector policies.
+          - `local_address_prefixes` - (Required) A list of local address prefixes.
+          - `remote_address_prefixes` - (Required) A list of remote address prefixes.
+    - `express_route_circuits` - (Optional) A map of ExpressRoute circuits with connections and peering configurations. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
+      - `id` - (Required) The resource ID of the ExpressRoute circuit.
+      - `connection` - (Optional) Virtual Network Gateway Connection settings for the ExpressRoute circuit.
+        - `resource_group_name` - (Optional) The resource group for the connection.
+        - `authorization_key` - (Optional) The authorization key for the ExpressRoute Circuit.
+        - `express_route_gateway_bypass` - (Optional) Whether to bypass the ExpressRoute Gateway for data forwarding.
+        - `private_link_fast_path_enabled` - (Optional) Bypass the Express Route gateway when accessing private-links. When enabled `express_route_gateway_bypass` must be set to `true`. Defaults to `false`.
+        - `name` - (Optional) The name of the connection.
+        - `routing_weight` - (Optional) The routing weight. Defaults to `10`.
+        - `shared_key` - (Optional) The shared key for the connection.
+        - `tags` - (Optional) Tags to apply. Defaults to `{}`.
+      - `peering` - (Optional) ExpressRoute Circuit Peering configuration.
+        - `peering_type` - (Required) The peering type. Possible values are `AzurePrivatePeering`, `AzurePublicPeering` or `MicrosoftPeering`.
+        - `vlan_id` - (Required) The VLAN ID for the peering.
+        - `resource_group_name` - (Optional) The resource group for the peering.
+        - `ipv4_enabled` - (Optional) Whether IPv4 is enabled. Defaults to `true`.
+        - `peer_asn` - (Optional) The peer ASN.
+        - `primary_peer_address_prefix` - (Optional) The primary address prefix.
+        - `secondary_peer_address_prefix` - (Optional) The secondary address prefix.
+        - `shared_key` - (Optional) The shared key for the peering.
+        - `route_filter_id` - (Optional) The ID of the route filter to apply.
+        - `microsoft_peering_config` - (Optional) Microsoft Peering configuration.
+          - `advertised_public_prefixes` - (Required) A list of public prefixes to advertise.
+          - `advertised_communities` - (Optional) A list of communities to advertise.
+          - `customer_asn` - (Optional) The customer ASN.
+          - `routing_registry_name` - (Optional) The routing registry name.
+    - `express_route_remote_vnet_traffic_enabled` - (Optional) Enable ExpressRoute traffic incoming from other connected VNets. Defaults to `false`.
+    - `express_route_virtual_wan_traffic_enabled` - (Optional) Enable ExpressRoute traffic incoming from other connected VWANs. Defaults to `false`.
+    - `hosted_on_behalf_of_public_ip_enabled` - (Optional) Whether to attach a HOBO (hosted on behalf of) public IP for the gateway. Defaults to `false`.
+    - `vpn_active_active_enabled` - (Optional) Enable active-active mode for the VPN gateway. Defaults to `true`.
+    - `vpn_bgp_enabled` - (Optional) Enable BGP for the VPN gateway. Defaults to `false`.
+    - `vpn_bgp_route_translation_for_nat_enabled` - (Optional) Enable BGP route translation for NAT. Defaults to `false`.
+    - `vpn_bgp_settings` - (Optional) BGP settings for the VPN gateway.
+      - `asn` - (Optional) The ASN for the BGP speaker. Defaults to `65515`.
+      - `peer_weight` - (Optional) The weight added to routes learned from this BGP speaker.
+    - `vpn_custom_route` - (Optional) Custom routes address space for VPN client.
+      - `address_prefixes` - (Required) A list of address prefixes for custom routes.
+    - `vpn_default_local_network_gateway_id` - (Optional) The ID of the default local network gateway.
+    - `vpn_dns_forwarding_enabled` - (Optional) Enable DNS forwarding for the VPN gateway.
+    - `vpn_generation` - (Optional) The Generation for the VPN gateway. Valid values are `Generation1` and `Generation2`. Options differ depending on SKU.
+    - `vpn_ip_sec_replay_protection_enabled` - (Optional) Enable IPsec replay protection. Defaults to `true`.
+    - `vpn_point_to_site` - (Optional) Point-to-site VPN configuration.
+      - `address_space` - (Required) A list of address spaces for the P2S VPN client.
+      - `aad_tenant` - (Optional) The AAD tenant URL for authentication.
+      - `aad_audience` - (Optional) The AAD audience for authentication.
+      - `aad_issuer` - (Optional) The AAD issuer URL for authentication.
+      - `radius_server_address` - (Optional) The RADIUS server address.
+      - `radius_server_secret` - (Optional) The RADIUS server secret.
+      - `root_certificates` - (Optional) A map of root certificates.
+        - `name` - (Required) The name of the root certificate.
+        - `public_cert_data` - (Required) The public certificate data in Base64 encoding.
+      - `revoked_certificates` - (Optional) A map of revoked certificates.
+        - `name` - (Required) The name of the revoked certificate.
+        - `thumbprint` - (Required) The certificate thumbprint.
+      - `radius_servers` - (Optional) A map of RADIUS servers.
+        - `address` - (Required) The RADIUS server address.
+        - `secret` - (Required) The RADIUS server secret.
+        - `score` - (Required) The priority score of the RADIUS server.
+      - `vpn_client_protocols` - (Optional) A list of VPN client protocols. Possible values include `SSTP`, `IkeV2`, `OpenVPN`.
+      - `vpn_auth_types` - (Optional) A list of VPN authentication types. Possible values include `AAD`, `Radius`, `Certificate`.
+      - `ipsec_policy` - (Optional) IPsec policy for the P2S VPN.
+        - `dh_group` - (Required) The DH Group.
+        - `ike_encryption` - (Required) The IKE encryption algorithm.
+        - `ike_integrity` - (Required) The IKE integrity algorithm.
+        - `ipsec_encryption` - (Required) The IPSec encryption algorithm.
+        - `ipsec_integrity` - (Required) The IPSec integrity algorithm.
+        - `pfs_group` - (Required) The PFS Group.
+        - `sa_data_size_in_kilobytes` - (Optional) The IPSec SA data size in KB.
+        - `sa_lifetime_in_seconds` - (Optional) The IPSec SA lifetime in seconds.
+      - `virtual_network_gateway_client_connections` - (Optional) A map of VPN client connections.
+        - `name` - (Required) The name of the client connection.
+        - `policy_group_names` - (Required) A list of VPN policy group names.
+        - `address_prefixes` - (Required) A list of address prefixes for the client connection.
+    - `vpn_policy_groups` - (Optional) A map of VPN policy groups. Defaults to `{}`.
+      - `name` - (Required) The name of the policy group.
+      - `is_default` - (Optional) Whether this is the default policy group.
+      - `priority` - (Optional) The priority of the policy group.
+      - `policy_members` - (Required) A map of policy members.
+        - `name` - (Required) The name of the policy member.
+        - `type` - (Required) The type. Possible values are `AADGroupId`, `CertificateGroupId`, `RadiusAzureGroupId`.
+        - `value` - (Required) The value of the policy member.
+    - `vpn_private_ip_address_enabled` - (Optional) Enable private IP address for the VPN gateway.
+    - `vpn_type` - (Optional) The VPN type. Possible values are `RouteBased` and `PolicyBased`. Defaults to `"RouteBased"`.
+    - `route_table_creation_enabled` - (Optional) Whether to create a Route Table for the GatewaySubnet. Defaults to `false`.
+    - `route_table_name` - (Optional) The name of the Route Table.
+    - `route_table_bgp_route_propagation_enabled` - (Optional) Whether BGP route propagation is enabled on the Route Table. Defaults to `true`.
+    - `route_table_resource_group_name` - (Optional) The resource group for the Route Table. Defaults to the gateway's resource group.
+    - `route_table_tags` - (Optional) Tags for the Route Table. Defaults to `{}`.
+    - `retry` - (Optional) Retry configuration for transient errors during resource provisioning.
+      - `error_message_regex` - (Optional) A list of regular expressions to match against error messages for retrying. Defaults to `["ReferencedResourceNotProvisioned"]`.
+      - `interval_seconds` - (Optional) The initial interval in seconds between retry attempts. Defaults to `10`.
+      - `max_interval_seconds` - (Optional) The maximum interval in seconds between retry attempts. Defaults to `180`.
+    - `timeouts` - (Optional) An object defining timeout durations for resource operations.
+      - `create` - (Optional) The timeout for create operations. Defaults to `"60m"`.
+      - `read` - (Optional) The timeout for read operations. Defaults to `"5m"`.
+      - `update` - (Optional) The timeout for update operations. Defaults to `"60m"`.
+      - `delete` - (Optional) The timeout for delete operations. Defaults to `"60m"`.
+    - `diagnostic_settings` - (Optional) A map of diagnostic settings to create on the gateway. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`.
   EOT
+}
+
+variable "flowlog_configuration" {
+  type = object({
+    network_watcher_id   = optional(string)
+    network_watcher_name = optional(string)
+    resource_group_name  = optional(string)
+    location             = optional(string)
+    flow_logs = optional(map(object({
+      enabled = bool
+      name    = string
+      virtual_network = optional(object({
+        key = optional(string)
+        id  = optional(string)
+      }))
+      storage_account_id = string
+      retention_policy = object({
+        days    = number
+        enabled = bool
+      })
+      traffic_analytics = optional(object({
+        enabled               = bool
+        interval_in_minutes   = optional(number)
+        workspace_id          = optional(string)
+        workspace_region      = optional(string)
+        workspace_resource_id = optional(string)
+      }))
+      version = optional(number)
+    })), null)
+    lock = optional(object({
+      kind = string
+      name = optional(string, null)
+    }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = optional(string)
+      assign_to_caller                       = optional(bool, false)
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string), {})
+  })
+  default     = null
+  description = <<-EOT
+    Network Watcher and VNet flow log configuration. When `null` (the default), no Network Watcher or flow logs are configured.
+
+    - `network_watcher_id` - (Optional) The resource ID of an existing Network Watcher.
+    - `network_watcher_name` - (Optional) The name of an existing Network Watcher.
+    - `resource_group_name` - (Optional) The name of the resource group containing the Network Watcher.
+    - `location` - (Optional) The Azure region for the Network Watcher. Defaults to `null`.
+    - `flow_logs` - (Optional) A map of flow logs to create for the Network Watcher. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `null`.
+      - `enabled` - (Required) Whether Network Flow Logging should be enabled.
+      - `name` - (Required) The name of the Network Watcher Flow Log. Changing this forces a new resource to be created.
+      - `virtual_network` - (Optional) The virtual network for which to enable flow logs. Provide exactly one of `key` or `id`.
+        - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+        - `id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+      - `storage_account_id` - (Required) The resource ID of the storage account for flow log data.
+      - `retention_policy` - (Required) The retention policy for flow log records.
+        - `days` - (Required) The number of days to retain flow log records.
+        - `enabled` - (Required) Whether retention is enabled.
+      - `traffic_analytics` - (Optional) Traffic analytics configuration.
+        - `enabled` - (Required) Whether traffic analytics is enabled.
+        - `interval_in_minutes` - (Optional) How frequently service should do flow analytics in minutes.
+        - `workspace_id` - (Optional) The resource GUID of the attached workspace.
+        - `workspace_region` - (Optional) The location of the attached workspace.
+        - `workspace_resource_id` - (Optional) The resource ID of the attached workspace.
+      - `version` - (Optional) The version (revision) of the flow log. Possible values are `1` and `2`.
+    - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
+      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+      - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign to the principal.
+      - `principal_id` - (Optional) The ID of the principal to assign the role to. Mutually exclusive with `assign_to_caller`.
+      - `assign_to_caller` - (Optional) When `true`, automatically uses the object ID of the identity running Terraform as the principal. Mutually exclusive with `principal_id`. Defaults to `false`.
+      - `description` - (Optional) The description of the role assignment.
+      - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to `false`.
+      - `condition` - (Optional) The condition which will be used to scope the role assignment.
+      - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+      - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+      - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+
+      > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+
+    - `tags` - (Optional) Tags to apply to the Network Watcher. Defaults to `{}`.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`. If `network_watcher_id`, `network_watcher_name`, and `resource_group_name` are not specified, defaults to the Azure auto-created `NetworkWatcher_<location>` in `NetworkWatcherRG`.
+  EOT
+
+  validation {
+    condition = var.flowlog_configuration == null ? true : alltrue([
+      for ra_key, ra in var.flowlog_configuration.role_assignments : ((ra.principal_id != null ? 1 : 0) + (ra.assign_to_caller ? 1 : 0)) == 1
+    ])
+    error_message = "Each flowlog configuration role assignment must set exactly one of principal_id or assign_to_caller."
+  }
 }

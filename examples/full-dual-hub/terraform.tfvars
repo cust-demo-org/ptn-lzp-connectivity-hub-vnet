@@ -98,10 +98,14 @@ virtual_networks = {
     address_space      = ["10.0.0.0/16"]
     subnets = {
       snet_workload = {
-        name                       = "snet-workload"
-        address_prefixes           = ["10.0.1.0/24"]
-        network_security_group_key = "nsg_internet"
-        nat_gateway_key            = "natgw_internet"
+        name             = "snet-workload"
+        address_prefixes = ["10.0.1.0/24"]
+        network_security_group = {
+          key = "nsg_internet"
+        }
+        nat_gateway = {
+          key = "natgw_internet"
+        }
       }
       AzureFirewallSubnet = {
         name             = "AzureFirewallSubnet"
@@ -119,9 +123,11 @@ virtual_networks = {
     address_space      = ["10.1.0.0/16"]
     subnets = {
       snet_workload = {
-        name                       = "snet-workload"
-        address_prefixes           = ["10.1.1.0/24"]
-        network_security_group_key = "nsg_intranet"
+        name             = "snet-workload"
+        address_prefixes = ["10.1.1.0/24"]
+        network_security_group = {
+          key = "nsg_intranet"
+        }
       }
       AzureFirewallSubnet = {
         name             = "AzureFirewallSubnet"
@@ -159,12 +165,14 @@ firewall_policies = {
 # --------------------------------------------------------------------------
 firewalls = {
   fw_internet = {
-    name                = "fw-internet-dualhub"
-    resource_group_key  = "rg_connectivity"
-    sku_name            = "AZFW_VNet"
-    sku_tier            = "Standard"
-    firewall_policy_key = "fwp_internet"
-    zones               = ["1", "2", "3"]
+    name               = "fw-internet-dualhub"
+    resource_group_key = "rg_connectivity"
+    sku_name           = "AZFW_VNet"
+    sku_tier           = "Standard"
+    firewall_policy = {
+      key = "fwp_internet"
+    }
+    zones = ["1", "2", "3"]
     ip_configuration = {
       default = {
         name = "ipconfig-fw-internet"
@@ -189,12 +197,14 @@ firewalls = {
     }
   }
   fw_intranet = {
-    name                = "fw-intranet-dualhub"
-    resource_group_key  = "rg_connectivity"
-    sku_name            = "AZFW_VNet"
-    sku_tier            = "Standard"
-    firewall_policy_key = "fwp_intranet"
-    zones               = ["1", "2", "3"]
+    name               = "fw-intranet-dualhub"
+    resource_group_key = "rg_connectivity"
+    sku_name           = "AZFW_VNet"
+    sku_tier           = "Standard"
+    firewall_policy = {
+      key = "fwp_intranet"
+    }
+    zones = ["1", "2", "3"]
     ip_configuration = {
       default = {
         name = "ipconfig-fw-intranet"
@@ -231,7 +241,9 @@ firewalls = {
 #     fl_internet = {
 #       enabled            = true
 #       name               = "fl-hub-internet"
-#       vnet_key           = "vnet_internet"
+#       virtual_network = {
+#         key = "vnet_internet"
+#       }
 #       storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-connectivity-dualhub/providers/Microsoft.Storage/storageAccounts/stflowlogsdualhub"
 #       retention_policy   = { enabled = true, days = 7 }
 #       traffic_analytics = {
@@ -242,7 +254,9 @@ firewalls = {
 #     fl_intranet = {
 #       enabled            = true
 #       name               = "fl-hub-intranet"
-#       vnet_key           = "vnet_intranet"
+#       virtual_network = {
+#         key = "vnet_intranet"
+#       }
 #       storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-connectivity-dualhub/providers/Microsoft.Storage/storageAccounts/stflowlogsdualhub"
 #       retention_policy   = { enabled = true, days = 7 }
 #       traffic_analytics = {

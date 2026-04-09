@@ -77,15 +77,21 @@ public_ip_addresses = {
 ```
 
 This pattern applies consistently:
+- `firewall.firewall_policy` → `{ key, id }`
 - `firewall.ip_configuration[].public_ip_address` → `{ key, id }`
 - `firewall.ip_configuration[].subnet` → `{ vnet_key, subnet_key, id }`
 - `firewall.management_ip_configuration.public_ip_address` → `{ key, id }`
 - `firewall.management_ip_configuration.subnet` → `{ vnet_key, subnet_key, id }`
 - `nat_gateway.public_ip_addresses` → `{ keys, ids }`
+- `virtual_network.subnets[].network_security_group` → `{ key, id }`
+- `virtual_network.subnets[].route_table` → `{ key, id }`
+- `virtual_network.subnets[].nat_gateway` → `{ key, id }`
+- `virtual_network_gateway.virtual_network` → `{ key, id }`
 - `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, id }`
 - `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, id }`
-- `virtual_network_gateway.virtual_network_key` / `virtual_network_id` (flat fields — predates object convention)
-- `firewall.firewall_policy_key` / `firewall_policy_id` (flat fields — predates object convention)
+- `private_dns_zones.virtual_network_links[].virtual_network` → `{ key, id }`
+- `byo_private_dns_zone_links[].virtual_network` → `{ key, id }`
+- `flowlog_configuration.flow_logs[].virtual_network` → `{ key, id }`
 
 ### Updated Output Contracts
 
@@ -205,7 +211,7 @@ All root-level variable descriptions follow AVM module documentation conventions
 | `default_naming_convention_sequence` | `object({starting_number, padding_format})` | No | `{starting_number=1, padding_format="%03d"}` |
 | `timeouts` | `object({create?, read?, update?, delete?})` | No | `{}` |
 
-**Contract**: `hub_virtual_networks` keys are user-chosen. Subnets within hubs may reference `nsg_key` and `nat_gateway_key` — the wrapper resolves these to resource IDs before passing to the core pattern.
+**Contract**: `hub_virtual_networks` keys are user-chosen. Subnets within hubs may reference `network_security_group = { key }`, `route_table = { key }`, and `nat_gateway = { key }` — the wrapper resolves these to resource IDs before passing to the core pattern. Similarly, DNS zone links use `virtual_network = { key }` and firewalls use `firewall_policy = { key }`.
 
 ### Supplementary Module Variables
 

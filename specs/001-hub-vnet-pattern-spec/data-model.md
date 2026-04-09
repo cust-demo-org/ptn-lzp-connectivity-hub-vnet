@@ -69,11 +69,15 @@ All cross-resource references use key-based lookups in `locals.tf`:
 
 | Source Entity | Reference Field | Target Entity | Resolution |
 |---------------|----------------|---------------|------------|
-| VNet subnet | `network_security_group_key` | NSG | `local.nsg_resource_ids[key]` |
-| VNet subnet | `route_table_key` | Route Table | `local.rt_resource_ids[key]` |
+| VNet subnet | `network_security_group = { key }` | NSG | `local.nsg_resource_ids[key]` |
+| VNet subnet | `route_table = { key }` | Route Table | `local.rt_resource_ids[key]` |
+| VNet subnet | `nat_gateway = { key }` | NAT Gateway | `local.nat_gateway_resource_ids[key]` |
 | NSG / NAT GW / Route Table / VNet / Firewall / etc. | `resource_group_key` | Resource Group | `local.resource_group_names[key]` |
-| DNS Zone VNet Link | `virtual_network_key` | Virtual Network | `local.vnet_resource_ids[key]` |
-| Flow Log | `vnet_key` | Virtual Network | `local.vnet_resource_ids[key]` |
+| DNS Zone VNet Link | `virtual_network = { key }` | Virtual Network | `local.vnet_resource_ids[key]` |
+| BYO DNS Zone Link | `virtual_network = { key }` | Virtual Network | `local.vnet_resource_ids[key]` |
+| Flow Log | `virtual_network = { key }` | Virtual Network | `local.vnet_resource_ids[key]` |
+| VNet Gateway | `virtual_network = { key }` | Virtual Network | `local.vnet_resource_ids[key]` |
+| Firewall | `firewall_policy = { key }` | Firewall Policy | `local.firewall_policy_resource_ids[key]` |
 | Role Assignment | `managed_identity_key` | Managed Identity | `local.managed_identity_principal_ids[key]` |
 
 > **Note**: The original data model content and previous amendments below are preserved for historical context. Where they conflict with this amendment, this amendment takes precedence.
@@ -223,8 +227,8 @@ The entity diagram and descriptions below are preserved for historical context. 
 | `tags` | `map(string)` | No | `var.tags` | Tags |
 
 **Key**: `nat_gateway_key` — globally unique in `var.nat_gateways` flat map.
-**Relationships**: Referenced by hub subnets via `nat_gateway = { id = local.nat_gateway_resource_ids[nat_gateway_key] }`.
-**Validation**: Pattern MUST fail at plan time if a referenced `nat_gateway_key` does not exist.
+**Relationships**: Referenced by hub subnets via `nat_gateway = { key = "<nat_gateway_key>" }`, resolved to `{ id = local.nat_gateway_resource_ids[key] }`.
+**Validation**: Pattern MUST fail at plan time if a referenced `nat_gateway.key` does not exist.
 
 ---
 
@@ -286,7 +290,7 @@ The entity diagram and descriptions below are preserved for historical context. 
 | `network_watcher_id` | `string` | No | Auto-created | Existing watcher ID |
 | `location` | `string` | No | `var.location` | Azure region |
 | `flow_logs` | `map(object(...))` | No | `null` | Flow log entries |
-| `flow_logs[*].vnet_key` | `string` | Yes (per entry) | — | Hub VNet key for flow logging |
+| `flow_logs[*].virtual_network` | `object({ key, id })` | Yes (per entry) | — | Hub VNet reference for flow logging |
 | `flow_logs[*].storage_account` | `object(...)` | Yes (per entry) | — | Storage target (key or resource_id) |
 | `flow_logs[*].traffic_analytics` | `object(...)` | No | `null` | Traffic analytics config |
 
@@ -318,11 +322,11 @@ module "hub_and_spoke_vnet_pattern" {
       hub_virtual_network = merge(hub.hub_virtual_network, {
         subnets = {
           for sk, subnet in hub.hub_virtual_network.subnets : sk => merge(subnet, {
-            network_security_group = subnet.nsg_key != null ? {
-              id = local.nsg_resource_ids[subnet.nsg_key]
+            network_security_group = subnet.network_security_group != null && subnet.network_security_group.key != null ? {
+              id = local.nsg_resource_ids[subnet.network_security_group.key]
             } : null
-            nat_gateway = subnet.nat_gateway_key != null ? {
-              id = local.nat_gateway_resource_ids[subnet.nat_gateway_key]
+            nat_gateway = subnet.nat_gateway != null && subnet.nat_gateway.key != null ? {
+              id = local.nat_gateway_resource_ids[subnet.nat_gateway.key]
             } : null
           })
         }

@@ -49,10 +49,11 @@ The monolithic `hub_virtual_networks` variable is replaced with individual flat 
 
 The wrapper still resolves cross-resource references via key-based lookups in `locals.tf`:
 - `resource_group_key` → `local.resource_group_names[key]` / `local.resource_group_resource_ids[key]`
-- `nsg_key` / `network_security_group_key` → `local.nsg_resource_ids[key]` (for subnet associations)
-- `nat_gateway_key` → `local.nat_gateway_resource_ids[key]` (for subnet associations)
-- `route_table_key` → `local.rt_resource_ids[key]` (for subnet associations)
-- `virtual_network_key` → `local.vnet_resource_ids[key]` (for DNS zone VNet links, flow logs)
+- `network_security_group = { key }` → `local.nsg_resource_ids[key]` (for subnet associations)
+- `nat_gateway = { key }` → `local.nat_gateway_resource_ids[key]` (for subnet associations)
+- `route_table = { key }` → `local.rt_resource_ids[key]` (for subnet associations)
+- `virtual_network = { key }` → `local.vnet_resource_ids[key]` (for DNS zone VNet links, flow logs, VNet gateways)
+- `firewall_policy = { key }` → `local.firewall_policy_resource_ids[key]` (for firewall policy associations)
 - `managed_identity_key` → `local.managed_identity_principal_ids[key]` (for role assignments)
 
 ### Implementation Tasks (Remaining)

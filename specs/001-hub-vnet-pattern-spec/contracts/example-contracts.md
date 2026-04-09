@@ -14,7 +14,7 @@ This document defines the contracts for the AVM-style examples included with the
 
 Examples must be rewritten to reflect the new decomposed architecture. The consumer-facing variable interface changes from a monolithic `hub_virtual_networks` map to individual resource maps.
 
-- **`default/`**: Minimal deployment — 1 resource group, 1 VNet, 1 NSG. Demonstrates basic pattern usage with `network_security_group_key` cross-reference.
+- **`default/`**: Minimal deployment — 1 resource group, 1 VNet, 1 NSG. Demonstrates basic pattern usage with `network_security_group = { key }` cross-reference.
 - **`full-dual-hub/`**: Full deployment — 1 resource group, 2 VNets (internet + intranet), 2 NSGs, 1 NAT gateway (with pattern-managed public IP via `public_ip_addresses.keys`), 5 public IPs (2 FW normal + 2 FW management + 1 NAT GW), 2 firewall policies (internet with DNS proxy + intranet), 2 firewalls (each with `public_ip_address.key` referencing pattern-managed PIPs). Demonstrates all key-based cross-references.
 - Both examples use `terraform.tfvars` with `variables.tf` for passthrough.
 - All example variables include a `description` attribute with a brief purpose statement and a pointer to the main module.
@@ -305,12 +305,12 @@ storage_accounts = {
 flowlog_configuration = {
   flow_logs = {
     fl_internet = {
-      vnet_key        = "hub_internet"
+      virtual_network = { key = "hub_internet" }
       storage_account = { key = "sa_flowlogs" }
       traffic_analytics = { enabled = true }
     }
     fl_intranet = {
-      vnet_key        = "hub_intranet"
+      virtual_network = { key = "hub_intranet" }
       storage_account = { key = "sa_flowlogs" }
       traffic_analytics = { enabled = true }
     }

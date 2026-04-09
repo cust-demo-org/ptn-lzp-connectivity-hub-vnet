@@ -54,7 +54,7 @@ variable "public_ips" {
 variable "firewall_policies" {
   type        = any
   default     = {}
-  description = "Map of Azure Firewall Policies to create. Referenced by firewalls via firewall_policy_key. Refer to the main pattern module variable descriptions for complete details."
+  description = "Map of Azure Firewall Policies to create. Referenced by firewalls via firewall_policy = { key }. Refer to the main pattern module variable descriptions for complete details."
 }
 
 variable "firewalls" {

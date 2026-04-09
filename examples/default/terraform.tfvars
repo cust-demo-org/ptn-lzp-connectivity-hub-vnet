@@ -30,9 +30,11 @@ virtual_networks = {
     address_space      = ["10.0.0.0/16"]
     subnets = {
       snet_default = {
-        name                       = "snet-default"
-        address_prefixes           = ["10.0.1.0/24"]
-        network_security_group_key = "nsg_default"
+        name             = "snet-default"
+        address_prefixes = ["10.0.1.0/24"]
+        network_security_group = {
+          key = "nsg_default"
+        }
       }
     }
   }

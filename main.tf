@@ -30,58 +30,58 @@ resource "terraform_data" "key_validation" {
       condition = alltrue(flatten([
         for vnet_key, vnet in var.virtual_networks : [
           for sk, sv in vnet.subnets :
-          sv.network_security_group_key == null || contains(keys(var.network_security_groups), sv.network_security_group_key)
+          sv.network_security_group == null || sv.network_security_group.key == null || contains(keys(var.network_security_groups), sv.network_security_group.key)
         ]
       ]))
-      error_message = "One or more subnets reference a network_security_group_key that does not exist in var.network_security_groups."
+      error_message = "One or more subnets reference a network_security_group.key that does not exist in var.network_security_groups."
     }
     precondition {
       condition = alltrue(flatten([
         for vnet_key, vnet in var.virtual_networks : [
           for sk, sv in vnet.subnets :
-          sv.route_table_key == null || contains(keys(var.route_tables), sv.route_table_key)
+          sv.route_table == null || sv.route_table.key == null || contains(keys(var.route_tables), sv.route_table.key)
         ]
       ]))
-      error_message = "One or more subnets reference a route_table_key that does not exist in var.route_tables."
+      error_message = "One or more subnets reference a route_table.key that does not exist in var.route_tables."
     }
     precondition {
       condition = alltrue(flatten([
         for vnet_key, vnet in var.virtual_networks : [
           for sk, sv in vnet.subnets :
-          sv.nat_gateway_key == null || contains(keys(var.nat_gateways), sv.nat_gateway_key)
+          sv.nat_gateway == null || sv.nat_gateway.key == null || contains(keys(var.nat_gateways), sv.nat_gateway.key)
         ]
       ]))
-      error_message = "One or more subnets reference a nat_gateway_key that does not exist in var.nat_gateways."
+      error_message = "One or more subnets reference a nat_gateway.key that does not exist in var.nat_gateways."
     }
     precondition {
       condition = alltrue([
         for key, v in var.firewalls :
-        v.firewall_policy_key == null || contains(keys(var.firewall_policies), v.firewall_policy_key)
+        v.firewall_policy == null || v.firewall_policy.key == null || contains(keys(var.firewall_policies), v.firewall_policy.key)
       ])
-      error_message = "One or more firewalls reference a firewall_policy_key that does not exist in var.firewall_policies."
+      error_message = "One or more firewalls reference a firewall_policy.key that does not exist in var.firewall_policies."
     }
     precondition {
       condition = alltrue([
         for key, v in var.virtual_network_gateways :
-        v.virtual_network_key == null || contains(keys(var.virtual_networks), v.virtual_network_key)
+        v.virtual_network == null || v.virtual_network.key == null || contains(keys(var.virtual_networks), v.virtual_network.key)
       ])
-      error_message = "One or more virtual_network_gateways reference a virtual_network_key that does not exist in var.virtual_networks."
+      error_message = "One or more virtual_network_gateways reference a virtual_network.key that does not exist in var.virtual_networks."
     }
     precondition {
       condition = alltrue(flatten([
         for dns_key, dns in var.private_dns_zones : [
           for vnl_key, vnl in dns.virtual_network_links :
-          vnl.virtual_network_key == null || contains(keys(var.virtual_networks), vnl.virtual_network_key)
+          vnl.virtual_network == null || vnl.virtual_network.key == null || contains(keys(var.virtual_networks), vnl.virtual_network.key)
         ]
       ]))
-      error_message = "One or more private_dns_zones virtual_network_links reference a virtual_network_key that does not exist in var.virtual_networks."
+      error_message = "One or more private_dns_zones virtual_network_links reference a virtual_network.key that does not exist in var.virtual_networks."
     }
     precondition {
       condition = alltrue([
         for key, v in var.byo_private_dns_zone_links :
-        v.virtual_network_key == null || contains(keys(var.virtual_networks), v.virtual_network_key)
+        v.virtual_network == null || v.virtual_network.key == null || contains(keys(var.virtual_networks), v.virtual_network.key)
       ])
-      error_message = "One or more byo_private_dns_zone_links reference a virtual_network_key that does not exist in var.virtual_networks."
+      error_message = "One or more byo_private_dns_zone_links reference a virtual_network.key that does not exist in var.virtual_networks."
     }
   }
 }
@@ -228,21 +228,27 @@ module "virtual_network" {
 
   subnets = {
     for sk, sv in each.value.subnets : sk => merge(sv, {
-      network_security_group = sv.network_security_group_key != null ? {
-        id = local.nsg_resource_ids[sv.network_security_group_key]
-        } : sv.network_security_group_id != null ? {
-        id = sv.network_security_group_id
-      } : null
-      route_table = sv.route_table_key != null ? {
-        id = local.rt_resource_ids[sv.route_table_key]
-        } : sv.route_table_id != null ? {
-        id = sv.route_table_id
-      } : null
-      nat_gateway = sv.nat_gateway_key != null ? {
-        id = local.nat_gateway_resource_ids[sv.nat_gateway_key]
-        } : sv.nat_gateway_id != null ? {
-        id = sv.nat_gateway_id
-      } : null
+      network_security_group = sv.network_security_group != null ? (
+        sv.network_security_group.key != null ? {
+          id = local.nsg_resource_ids[sv.network_security_group.key]
+          } : sv.network_security_group.id != null ? {
+          id = sv.network_security_group.id
+        } : null
+      ) : null
+      route_table = sv.route_table != null ? (
+        sv.route_table.key != null ? {
+          id = local.rt_resource_ids[sv.route_table.key]
+          } : sv.route_table.id != null ? {
+          id = sv.route_table.id
+        } : null
+      ) : null
+      nat_gateway = sv.nat_gateway != null ? (
+        sv.nat_gateway.key != null ? {
+          id = local.nat_gateway_resource_ids[sv.nat_gateway.key]
+          } : sv.nat_gateway.id != null ? {
+          id = sv.nat_gateway.id
+        } : null
+      ) : null
       role_assignments = {
         for ra_key, ra in sv.role_assignments : ra_key => {
           role_definition_id_or_name             = ra.role_definition_id_or_name
@@ -290,7 +296,9 @@ module "virtual_network_gateway" {
   sku              = each.value.sku
   tags             = merge(var.tags, each.value.tags)
 
-  virtual_network_id      = each.value.virtual_network_key != null ? local.vnet_resource_ids[each.value.virtual_network_key] : each.value.virtual_network_id
+  virtual_network_id = each.value.virtual_network != null ? (
+    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.id
+  ) : null
   subnet_address_prefix   = each.value.subnet_address_prefix
   subnet_creation_enabled = each.value.subnet_creation_enabled
   virtual_network_gateway_subnet_id = each.value.gateway_subnet != null ? (
@@ -434,7 +442,9 @@ module "firewall" {
   location            = coalesce(each.value.location, var.location)
   firewall_sku_name   = each.value.sku_name
   firewall_sku_tier   = each.value.sku_tier
-  firewall_policy_id  = each.value.firewall_policy_key != null ? local.firewall_policy_resource_ids[each.value.firewall_policy_key] : each.value.firewall_policy_id
+  firewall_policy_id = each.value.firewall_policy != null ? (
+    each.value.firewall_policy.key != null ? local.firewall_policy_resource_ids[each.value.firewall_policy.key] : each.value.firewall_policy.id
+  ) : null
   ip_configurations = {
     for k, v in each.value.ip_configuration : k => {
       name                 = v.name
@@ -479,8 +489,10 @@ module "private_dns_zone" {
   parent_id        = local.resource_group_resource_ids[each.value.resource_group_key]
   virtual_network_links = {
     for vnl_k, vnl in each.value.virtual_network_links : vnl_k => {
-      name                                   = vnl.name
-      virtual_network_id                     = vnl.virtual_network_key != null ? local.vnet_resource_ids[vnl.virtual_network_key] : vnl.virtual_network_id
+      name = vnl.name
+      virtual_network_id = vnl.virtual_network != null ? (
+        vnl.virtual_network.key != null ? local.vnet_resource_ids[vnl.virtual_network.key] : vnl.virtual_network.id
+      ) : null
       registration_enabled                   = vnl.registration_enabled
       resolution_policy                      = vnl.resolution_policy
       private_dns_zone_supports_private_link = vnl.private_dns_zone_supports_private_link
@@ -509,9 +521,11 @@ module "private_dns_zone_link" {
 
   for_each = var.byo_private_dns_zone_links
 
-  name                                   = each.value.name
-  parent_id                              = each.value.private_dns_zone_id
-  virtual_network_id                     = each.value.virtual_network_key != null ? local.vnet_resource_ids[each.value.virtual_network_key] : each.value.virtual_network_id
+  name      = each.value.name
+  parent_id = each.value.private_dns_zone_id
+  virtual_network_id = each.value.virtual_network != null ? (
+    each.value.virtual_network.key != null ? local.vnet_resource_ids[each.value.virtual_network.key] : each.value.virtual_network.id
+  ) : null
   registration_enabled                   = each.value.registration_enabled
   resolution_policy                      = each.value.resolution_policy
   private_dns_zone_supports_private_link = each.value.private_dns_zone_supports_private_link
@@ -531,9 +545,11 @@ module "network_watcher" {
   location             = coalesce(var.flowlog_configuration.location, var.location)
   flow_logs = var.flowlog_configuration.flow_logs != null ? {
     for k, fl in var.flowlog_configuration.flow_logs : k => {
-      enabled            = fl.enabled
-      name               = fl.name
-      target_resource_id = fl.vnet_key != null ? local.vnet_resource_ids[fl.vnet_key] : fl.vnet_id
+      enabled = fl.enabled
+      name    = fl.name
+      target_resource_id = fl.virtual_network != null ? (
+        fl.virtual_network.key != null ? local.vnet_resource_ids[fl.virtual_network.key] : fl.virtual_network.id
+      ) : null
       retention_policy   = fl.retention_policy
       storage_account_id = fl.storage_account_id
       traffic_analytics  = fl.traffic_analytics
