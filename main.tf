@@ -1,6 +1,6 @@
 data "azurerm_client_config" "current" {}
 
-resource "terraform_data" "key_validation" {
+resource "terraform_data" "validation" {
   lifecycle {
     precondition {
       condition = alltrue([

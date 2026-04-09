@@ -27,22 +27,28 @@ variable "network_security_groups" {
   description = "Map of Network Security Groups to create. Referenced by VNet subnets via network_security_group_key. Refer to the main pattern module variable descriptions for complete details."
 }
 
-variable "nat_gateways" {
-  type        = any
-  default     = {}
-  description = "Map of NAT Gateways to create. Referenced by VNet subnets via nat_gateway_key. Refer to the main pattern module variable descriptions for complete details."
-}
-
 variable "route_tables" {
   type        = any
   default     = {}
   description = "Map of route tables to create. Referenced by VNet subnets via route_table_key. Refer to the main pattern module variable descriptions for complete details."
 }
 
+variable "nat_gateways" {
+  type        = any
+  default     = {}
+  description = "Map of NAT Gateways to create. Referenced by VNet subnets via nat_gateway_key. Refer to the main pattern module variable descriptions for complete details."
+}
+
 variable "virtual_networks" {
   type        = any
   default     = {}
   description = "Map of virtual networks to create with subnets, peerings, and DDoS configuration. Refer to the main pattern module variable descriptions for complete details."
+}
+
+variable "virtual_network_gateways" {
+  type        = any
+  default     = {}
+  description = "Map of VPN/ExpressRoute gateways to create. Refer to the main pattern module variable descriptions for complete details."
 }
 
 variable "public_ips" {
@@ -61,12 +67,6 @@ variable "firewalls" {
   type        = any
   default     = {}
   description = "Map of Azure Firewalls to create. Refer to the main pattern module variable descriptions for complete details."
-}
-
-variable "virtual_network_gateways" {
-  type        = any
-  default     = {}
-  description = "Map of VPN/ExpressRoute gateways to create. Refer to the main pattern module variable descriptions for complete details."
 }
 
 variable "private_dns_zones" {

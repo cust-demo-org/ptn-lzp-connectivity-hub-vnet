@@ -15,7 +15,7 @@ This document defines the contracts for the AVM-style examples included with the
 Examples must be rewritten to reflect the new decomposed architecture. The consumer-facing variable interface changes from a monolithic `hub_virtual_networks` map to individual resource maps.
 
 - **`default/`**: Minimal deployment — 1 resource group, 1 VNet, 1 NSG. Demonstrates basic pattern usage with `network_security_group = { key }` cross-reference.
-- **`full-dual-hub/`**: Full deployment — 1 resource group, 2 VNets (internet + intranet), 2 NSGs, 1 NAT gateway (with pattern-managed public IP via `public_ip_addresses.keys`), 5 public IPs (2 FW normal + 2 FW management + 1 NAT GW), 2 firewall policies (internet with DNS proxy + intranet), 2 firewalls (each with `public_ip_address.key` referencing pattern-managed PIPs). Demonstrates all key-based cross-references.
+- **`full-dual-hub/`**: Full deployment — 1 resource group, 2 VNets (internet + intranet), 2 NSGs, 1 NAT gateway (with pattern-managed public IP via `public_ip_addresses.keys`), 5 public IPs (2 FW normal + 2 FW management + 1 NAT GW), 2 firewall policies (internet with DNS proxy + intranet), 2 firewalls (each with `public_ip_address.key` referencing pattern-managed PIPs). External resources: 1 RG, 1 VNet + subnet (PEP), 1 storage account + blob PEP, 1 private DNS zone. Cross-references: VNet peering to external VNet, BYO DNS zone links, flow logs referencing external storage account.
 - Both examples use `terraform.tfvars` with `variables.tf` for passthrough.
 - All example variables include a `description` attribute with a brief purpose statement and a pointer to the main module.
 
@@ -42,7 +42,7 @@ Examples must be rewritten to reflect the new decomposed architecture. The consu
 ### Changes to Examples
 
 - **`default/`**: Removed `log_analytics_workspace_configuration` from module call and tfvars. Example now deploys: 1 resource group, 1 hub VNet with firewall + bastion, 1 NSG.
-- **`full-dual-hub/`**: Removed inline common services VNet, spoke peering, storage accounts, LAW. Flow logs now use `storage_account_id` directly. Example now deploys: 1 resource group, 2 hub VNets (internet + intranet) with firewalls and bastion, 2 NSGs, 1 NAT gateway, flow logs.
+- **`full-dual-hub/`**: Removed inline common services VNet, spoke peering, storage accounts, LAW. Flow logs now use `storage_account_id` directly. Example now deploys: 1 resource group, 2 hub VNets (internet + intranet) with firewalls, 2 NSGs, 1 NAT gateway. External resources (RG, VNet, storage account with blob PEP, private DNS zone) created outside the pattern and wired in via peerings, BYO DNS zone links, and flowlog configuration.
 - Both examples use `terraform.tfvars` with `variables.tf` for passthrough (no `random` provider needed).
 - All example variables include a `description` attribute with a brief purpose statement and a pointer: "Refer to the main pattern module variable descriptions for complete details."
 - Removed variables from example module calls: `byo_log_analytics_workspace`, `log_analytics_workspace_configuration`, `route_tables`, `private_dns_zones`, `byo_private_dns_zone_links`, `managed_identities`, `spoke_virtual_networks`, `storage_accounts`, `role_assignments`.
@@ -173,147 +173,124 @@ module "hub" {
 
 ## Example: `full-dual-hub/` (Dual-Hub Internet + Intranet)
 
-**Purpose**: Demonstrate a dual-hub topology matching the reference architecture — an internet egress/ingress hub and an intranet ingress hub, both peered to a common services VNet.
+**Purpose**: Demonstrate a dual-hub topology with external resources for flow log storage integrated via pattern cross-references (peerings, BYO DNS zone links, flowlog configuration).
 
 **Reference Architecture**:
 ```
-┌────────────────────────────────────────────────────────┐
-│  Common Services VNET (GEN Non Routable)               │
-│  ┌──────────────────────┐                              │
-│  │  DNS Resolver Subnet  │                              │
-│  │  [DNS Resolver]       │                              │
-│  └──────────────────────┘                              │
-└────────┬────────────────────────────────────┬──────────┘
-         │  Peering                           │  Peering
-┌────────┴───────────────────┐  ┌─────────────┴──────────────┐
-│ Internet Egress/Ingress    │  │ Intranet Ingress           │
-│ VNET (Non Routable)        │  │ VNET (Routable)            │
-│ ┌─────────────────────────┐│  │ ┌──────────────────────────┐│
-│ │ [NAT GW] [Firewall]     ││  │ │ [Firewall]               ││
-│ │ Firewall Subnet         ││  │ │ Firewall Subnet          ││
-│ └─────────────────────────┘│  │ └──────────────────────────┘│
-└────────────────────────────┘  └─────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        External Resources                               │
+│  ┌─────────────────────────────────────────────┐                        │
+│  │  Flowlog VNet (10.10.0.0/24)                │                        │
+│  │  ┌────────────────────┐                     │                        │
+│  │  │  snet-pep          │                     │                        │
+│  │  │  [PEP → Blob SA]   │                     │                        │
+│  │  └────────────────────┘                     │                        │
+│  └────────┬─────────────────────────┬──────────┘                        │
+│           │  Peering                │  Peering                          │
+│  ┌────────┴───────────────────┐  ┌──┴──────────────────────────────┐    │
+│  │ Internet Egress/Ingress    │  │ Intranet Ingress                │    │
+│  │ VNET (10.0.0.0/16)        │  │ VNET (10.1.0.0/16)              │    │
+│  │ ┌─────────────────────────┐│  │ ┌──────────────────────────────┐│    │
+│  │ │ [NAT GW] [Firewall]     ││  │ │ [Firewall]                   ││    │
+│  │ │ Firewall Subnet         ││  │ │ Firewall Subnet              ││    │
+│  │ └─────────────────────────┘│  │ └──────────────────────────────┘│    │
+│  └────────────────────────────┘  └─────────────────────────────────┘    │
+│                                                                         │
+│  Private DNS Zone: privatelink.blob.core.windows.net                    │
+│    → linked to flowlog VNet, internet VNet, intranet VNet               │
+│                                                                         │
+│  Flow Logs: internet VNet + intranet VNet → external storage account    │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 **What it exercises**:
-- Two resource groups (one connectivity, one common services)
+- One pattern-managed resource group (connectivity)
 - Two hub VNets in the same region (`southeastasia`):
-  - **Internet Egress/Ingress** (`hub_internet`): Firewall (Standard) + NAT Gateway + Bastion, GEN non-routable address space
-  - **Intranet Ingress** (`hub_intranet`): Firewall (Standard) only, GEN routable address space
-- Common Services VNet with DNS Resolver subnet, peered to both hubs
-- Mesh peering between the two hubs (core pattern's built-in mesh)
+  - **Internet Egress/Ingress** (`vnet_internet`): Firewall (Standard) + NAT Gateway, non-routable address space
+  - **Intranet Ingress** (`vnet_intranet`): Firewall (Standard) only, routable address space
 - NSGs on user subnets across both hubs
 - NAT Gateway on the internet hub only
-- Flow logs with wrapper-created storage account + traffic analytics
-- Network Watcher configuration
-- LAW created by wrapper
-- **All parameters passthrough from variables** — no hardcoded values in module blocks
+- External resources (outside pattern module):
+  - 1 resource group for flowlog infrastructure
+  - 1 VNet + 1 subnet for storage account private endpoint
+  - 1 storage account for flow log storage with blob private endpoint
+  - 1 private DNS zone (`privatelink.blob.core.windows.net`)
+- Cross-reference integration:
+  - VNet peering: both hub VNets ↔ flowlog VNet (with reverse peering)
+  - BYO DNS zone links: blob DNS zone → both hub VNets (via `virtual_network.key`)
+  - Flow log configuration: both hub VNets → external storage account (via `storage_account_id`)
+- Dynamic cross-references built in `main.tf` locals (merging with `var` values)
+- **All pattern parameters passthrough from variables** — dynamic parts constructed in locals
 
 **`main.tf` contract** (high-level):
 ```hcl
-# Two hubs in the same region — internet + intranet
-hub_virtual_networks = {
-  hub_internet = {
-    location = "southeastasia"
-    hub_virtual_network = {
-      address_space = ["10.0.0.0/16"]  # GEN Non Routable
-      subnets = {
-        snet_workload = {
-          name             = "snet-workload"
-          address_prefixes = ["10.0.1.0/24"]
-          network_security_group = { resource_id = null }  # resolved from nsg_key
-          nat_gateway            = { resource_id = null }  # resolved from nat_gateway_key
+# External resources — outside pattern module
+resource "azurerm_resource_group" "flowlog" { ... }
+resource "azurerm_virtual_network" "flowlog" { address_space = ["10.10.0.0/24"] }
+resource "azurerm_subnet" "pep" { address_prefixes = ["10.10.0.0/26"] }
+resource "azurerm_storage_account" "flowlog" { ... }
+resource "azurerm_private_dns_zone" "blob" { name = "privatelink.blob.core.windows.net" }
+resource "azurerm_private_dns_zone_virtual_network_link" "blob_flowlog_vnet" { ... }
+resource "azurerm_private_endpoint" "blob" { subresource_names = ["blob"] }
+
+# Dynamic cross-references in locals
+locals {
+  # Merge peerings to flowlog VNet into each hub VNet
+  virtual_networks = {
+    for k, v in var.virtual_networks : k => merge(v, {
+      peerings = merge(coalesce(try(v.peerings, null), {}), {
+        peer_to_flowlog = {
+          name                               = "peer-${k}-to-flowlog"
+          remote_virtual_network_resource_id = azurerm_virtual_network.flowlog.id
+          create_reverse_peering             = true
+          reverse_name                       = "peer-flowlog-to-${k}"
         }
+      })
+    })
+  }
+
+  # BYO DNS zone links — blob DNS zone → both hub VNets
+  byo_private_dns_zone_links = merge(var.byo_private_dns_zone_links, {
+    link_blob_internet = {
+      name                = "link-blob-to-internet"
+      private_dns_zone_id = azurerm_private_dns_zone.blob.id
+      virtual_network     = { key = "vnet_internet" }
+    }
+    link_blob_intranet = {
+      name                = "link-blob-to-intranet"
+      private_dns_zone_id = azurerm_private_dns_zone.blob.id
+      virtual_network     = { key = "vnet_intranet" }
+    }
+  })
+
+  # Flow logs → external storage account
+  flowlog_configuration = {
+    location = var.location
+    flow_logs = {
+      fl_internet = {
+        enabled            = true
+        name               = "fl-hub-internet"
+        virtual_network    = { key = "vnet_internet" }
+        storage_account_id = azurerm_storage_account.flowlog.id
+        retention_policy   = { enabled = true, days = 7 }
+      }
+      fl_intranet = {
+        enabled            = true
+        name               = "fl-hub-intranet"
+        virtual_network    = { key = "vnet_intranet" }
+        storage_account_id = azurerm_storage_account.flowlog.id
+        retention_policy   = { enabled = true, days = 7 }
       }
     }
-    firewall = {
-      sku_tier              = "Standard"
-      subnet_address_prefix = "10.0.0.0/26"
-      zones                 = ["1", "2", "3"]
-    }
-    bastion = {
-      subnet_address_prefix = "10.0.0.64/26"
-      sku                   = "Standard"
-    }
-    enabled_resources = {
-      firewall                              = true
-      bastion                               = true
-      virtual_network_gateway_vpn           = false
-      virtual_network_gateway_express_route = false
-      private_dns_zones                     = false
-      private_dns_resolver                  = false
-    }
-  }
-
-  hub_intranet = {
-    location = "southeastasia"
-    hub_virtual_network = {
-      address_space = ["10.1.0.0/16"]  # GEN Routable
-      subnets = {
-        snet_workload = {
-          name             = "snet-workload"
-          address_prefixes = ["10.1.1.0/24"]
-          network_security_group = { resource_id = null }  # resolved from nsg_key
-        }
-      }
-    }
-    firewall = {
-      sku_tier              = "Standard"
-      subnet_address_prefix = "10.1.0.0/26"
-      zones                 = ["1", "2", "3"]
-    }
-    enabled_resources = {
-      firewall                              = true
-      bastion                               = false
-      virtual_network_gateway_vpn           = false
-      virtual_network_gateway_express_route = false
-      private_dns_zones                     = false
-      private_dns_resolver                  = false
-    }
   }
 }
 
-# Global NSG map — shared across hubs
-network_security_groups = {
-  nsg_internet = { ... }
-  nsg_intranet = { ... }
-}
-
-# NAT Gateway — internet hub only
-nat_gateways = {
-  natgw_internet = { ... }
-}
-
-# Common Services VNet peered to both hubs (DNS Resolver)
-spoke_virtual_networks = {
-  common_services_internet = {
-    spoke_vnet_resource_id = <common_services_vnet_id>
-    hub_key                = "hub_internet"
-  }
-  common_services_intranet = {
-    spoke_vnet_resource_id = <common_services_vnet_id>
-    hub_key                = "hub_intranet"
-  }
-}
-
-# Storage for flow logs
-storage_accounts = {
-  sa_flowlogs = { ... }
-}
-
-# Flow log configuration
-flowlog_configuration = {
-  flow_logs = {
-    fl_internet = {
-      virtual_network = { key = "hub_internet" }
-      storage_account = { key = "sa_flowlogs" }
-      traffic_analytics = { enabled = true }
-    }
-    fl_intranet = {
-      virtual_network = { key = "hub_intranet" }
-      storage_account = { key = "sa_flowlogs" }
-      traffic_analytics = { enabled = true }
-    }
-  }
+# Pattern module — uses locals for dynamic cross-references
+module "hub" {
+  source               = "../../"
+  virtual_networks     = local.virtual_networks
+  byo_private_dns_zone_links = local.byo_private_dns_zone_links
+  flowlog_configuration      = local.flowlog_configuration
+  # ... other vars passed through
 }
 ```

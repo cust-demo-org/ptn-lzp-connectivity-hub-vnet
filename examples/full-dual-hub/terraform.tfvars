@@ -2,9 +2,9 @@
 # Full Dual-Hub Deployment
 # --------------------------------------------------------------------------
 # Dual internet/intranet hub VNets with Azure Firewall, NAT Gateway,
-# and flow logs.
+# and flow logs backed by an external storage account with private endpoint.
 #
-# Resources created:
+# Pattern-managed resources (via module variables):
 #   - 1 resource group
 #   - 2 NSGs (internet + intranet workload subnets)
 #   - 1 NAT gateway (internet hub, using pattern-managed public IP)
@@ -12,6 +12,15 @@
 #   - 5 public IPs (2 FW normal + 2 FW management + 1 NAT GW)
 #   - 2 firewall policies (internet + intranet)
 #   - 2 firewalls (internet + intranet)
+#
+# External resources (created in main.tf, wired via cross-references):
+#   - 1 resource group (rg-flowlog-dualhub)
+#   - 1 VNet + 1 subnet (vnet-flowlog-dualhub / snet-pep)
+#   - 1 storage account for flow logs with blob private endpoint
+#   - 1 private DNS zone (privatelink.blob.core.windows.net)
+#   - VNet peering: both hub VNets ↔ flowlog VNet
+#   - BYO DNS zone links: blob DNS zone → both hub VNets
+#   - Flow logs: both hub VNets → external storage account
 # --------------------------------------------------------------------------
 
 location = "southeastasia"
@@ -233,36 +242,8 @@ firewalls = {
 # --------------------------------------------------------------------------
 # Flow Log Configuration
 # --------------------------------------------------------------------------
-# NOTE: Replace the storage_account_id values with a real storage account
-# resource ID in your environment.
-# flowlog_configuration = {
-#   location = "southeastasia"
-#   flow_logs = {
-#     fl_internet = {
-#       enabled            = true
-#       name               = "fl-hub-internet"
-#       virtual_network = {
-#         key = "vnet_internet"
-#       }
-#       storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-connectivity-dualhub/providers/Microsoft.Storage/storageAccounts/stflowlogsdualhub"
-#       retention_policy   = { enabled = true, days = 7 }
-#       traffic_analytics = {
-#         enabled             = true
-#         interval_in_minutes = 10
-#       }
-#     }
-#     fl_intranet = {
-#       enabled            = true
-#       name               = "fl-hub-intranet"
-#       virtual_network = {
-#         key = "vnet_intranet"
-#       }
-#       storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-connectivity-dualhub/providers/Microsoft.Storage/storageAccounts/stflowlogsdualhub"
-#       retention_policy   = { enabled = true, days = 7 }
-#       traffic_analytics = {
-#         enabled             = true
-#         interval_in_minutes = 10
-#       }
-#     }
-#   }
-# }
+# Flow logs are configured dynamically in main.tf locals, referencing the
+# external storage account created alongside the pattern module. See main.tf
+# for the flowlog_configuration, byo_private_dns_zone_links, and VNet
+# peering cross-references.
+# --------------------------------------------------------------------------
