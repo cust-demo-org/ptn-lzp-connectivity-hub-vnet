@@ -87,9 +87,13 @@ artifact, this constitution prevails.
 - Spoke virtual network creation (spokes are provisioned by their
   own landing zone patterns; this module peers TO existing spokes).
 - Application-level workload infrastructure.
-- Key Vaults, Storage Accounts, Managed Identities, Backup Vaults,
-  Recovery Services Vaults (these belong in spoke/shared-services
-  patterns).
+- Key Vaults, Backup Vaults, Recovery Services Vaults (these belong
+  in spoke/shared-services patterns).
+- Storage Accounts and Managed Identities ONLY when used as
+  standalone workload-facing resources. Pattern-internal instances
+  (flow-log storage, identity-based RBAC for supplementary modules)
+  are IN-SCOPE as supporting infrastructure — see Supplementary
+  AVM Resource Modules table.
 - Firewall Rule Collection Groups, Application Rules, Network Rules,
   NAT Rules (managed separately outside this pattern to allow
   independent lifecycle).
@@ -135,6 +139,9 @@ the resource or does not create the resource (only accepting IDs):
 | Log Analytics Workspace | `Azure/avm-res-operationalinsights-workspace/azurerm` | Core pattern accepts LAW IDs for firewall insights but does not create a workspace |
 | Network Watcher (Flow Logs) | `Azure/avm-res-network-networkwatcher/azurerm` | Core pattern does not manage network watcher or flow logs |
 | VNet Peering (hub→spoke) | `Azure/avm-res-network-virtualnetwork/azurerm` peering submodule OR `azurerm_virtual_network_peering` | Core pattern manages mesh peering between hubs but does not peer to external spoke VNets |
+| Managed Identity | `Azure/avm-res-managedidentity-userassignedidentity/azurerm` | Identity-based access for pattern-internal resources (e.g., flow-log storage RBAC) |
+| Storage Account | `Azure/avm-res-storage-storageaccount/azurerm` | Flow-log destination when BYO storage account not provided |
+| Role Assignment | `Azure/avm-res-authorization-roleassignment/azurerm` | RBAC grants for managed identities on pattern-internal resources |
 
 Before adding ANY new supplementary module, the contributor MUST:
 1. Verify the capability is not already provided by the core pattern.
@@ -172,10 +179,11 @@ Configuration Language (HCL) executed by Terraform.
   any provider-level provisioner blocks is FORBIDDEN.
 - External data retrieval MUST use only Terraform data sources
   or provider-native resources — never external scripts.
-- Terraform version constraints MUST be pinned to `~> 1.12`
-  (matching the core pattern's requirement).
-- Provider constraints: `azurerm ~> 4.0`, `azapi ~> 2.4`
-  (matching the core pattern), plus `random ~> 3.5` if needed.
+- Terraform version constraints MUST be pinned to `>= 1.13, < 2.0`
+  (per research.md R-006 / R-008 — compatible with core pattern's
+  `>= 1.9` requirement; aligned with existing codebase).
+- Provider constraints: `azurerm ~> 4.0`, `azapi ~> 2.0`
+  (per research.md R-008), plus `random ~> 3.0` if needed.
 
 **Rationale:** Declarative-only infrastructure ensures
 reproducibility, auditability, and eliminates an entire class
