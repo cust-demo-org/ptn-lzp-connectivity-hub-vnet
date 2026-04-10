@@ -8,7 +8,7 @@ This deploys a dual-hub topology — an internet egress/ingress hub and an intra
 - **Intranet Hub** (`vnet_intranet`): Azure Firewall (Standard) only, routable `10.1.0.0/16`
 - **Flowlog VNet** (`vnet-flowlog-dualhub`): External VNet `10.10.0.0/24` with PEP subnet, peered to both hubs
 - **Storage Account**: External storage account for flow logs, accessed via blob private endpoint
-- **Private DNS Zone**: External `privatelink.blob.core.windows.net` linked to both hub VNets via `byo_private_dns_zone_links`
+- **Private DNS Zone**: External `privatelink.blob.core.windows.net` linked to both hub VNets via `byo_private_dns_zone_virtual_network_links`
 
 ## Features tested
 
@@ -17,7 +17,7 @@ This deploys a dual-hub topology — an internet egress/ingress hub and an intra
 - Two NSGs — one per hub, associated via `network_security_group = { key }`
 - VNet peering from hub VNets to external flowlog VNet (with reverse peering)
 - External storage account with blob private endpoint for flow log storage
-- BYO private DNS zone links connecting external blob DNS zone to pattern VNets
+- BYO private dns zone virtual network links connecting external blob DNS zone to pattern VNets
 - Flow logs for both hub VNets referencing external storage account
 - Network Watcher auto-provisioned by flow log configuration
 - Dynamic cross-references built in `main.tf` locals (merging with `var` values)

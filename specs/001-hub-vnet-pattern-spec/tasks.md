@@ -23,7 +23,7 @@ The task list has been rewritten for the new architecture using individual AVM r
 | `module.nat_gateway` | âœ… Implemented | v0.3.2 â€” full passthrough |
 | `module.virtual_network` | âœ… Implemented | v0.17.1 â€” full passthrough with key resolution |
 | `module.private_dns_zone` | âœ… Implemented | v0.5.0 â€” full passthrough with VNet link key resolution |
-| `module.private_dns_zone_link` | âœ… Implemented | v0.5.0 â€” full passthrough with VNet key resolution |
+| `module.private_dns_zone_virtual_network_link` | âœ… Implemented | v0.5.0 â€” full passthrough with VNet key resolution |
 | `module.network_watcher` | âœ… Implemented | v0.3.2 â€” full passthrough |
 | `module.virtual_network_gateway` | â¬œ Stub | v0.16.14 â€” needs full passthrough implementation |
 | `module.public_ip` | â¬œ Stub | v0.2.1 â€” needs full passthrough implementation |
@@ -196,7 +196,7 @@ The following tasks were completed under the previous architecture using the cor
 
 - [x] T001 Retain `module "route_table"` per research.md R-010 â€” verify it serves additional custom route tables beyond core pattern scope. Update module version if needed and ensure passthrough variables match latest AVM interface
 - [x] T002 Retain `module "private_dns_zone"` per research.md R-010 â€” verify it serves additional DNS zone needs beyond core pattern scope (e.g., zones not covered by core pattern's private-link DNS). Update module version if needed and ensure passthrough variables match latest AVM interface
-- [x] T003 Retain `module "private_dns_zone_link"` per research.md R-010 â€” serves BYO DNS zone VNet links beyond core pattern scope. Update module version if needed and ensure passthrough variables match latest AVM interface
+- [x] T003 Retain `module "private_dns_zone_virtual_network_link"` per research.md R-010 â€” serves BYO DNS zone VNet links beyond core pattern scope. Update module version if needed and ensure passthrough variables match latest AVM interface
 - [x] T004 Update `module "managed_identity"` version from `"0.4.0"` to `"0.5.0"` in `main.tf`
 - [x] T005 Update `module "storage_account"` version from `"0.6.7"` to `"0.6.8"` in `main.tf`
 - [x] T006 Clean up stale locals in `locals.tf`: remove `key_vault_resource_ids` (no key_vault module exists). Retain `rt_resource_ids`, `private_dns_zone_resource_ids`, and `pe_dns_zone_ids` â€” these serve retained modules per R-010
@@ -401,7 +401,7 @@ The following tasks were completed under the previous architecture using the cor
 Phase 1 (Setup):
   â”Œâ”€ T001 (eval route_table)
   â”œâ”€ T002 (eval private_dns_zone)     â† all 3 in parallel
-  â””â”€ T003 (eval private_dns_zone_link)
+  â””â”€ T003 (eval private_dns_zone_virtual_network_link)
        â”‚
        â–¼
   â”Œâ”€ T004 (update MI version)
@@ -461,7 +461,7 @@ Phase 2 (Foundational):
 Per user instruction: "starter code provided can always be removed if AVM pattern `terraform-azurerm-avm-ptn-alz-connectivity-hub-and-spoke-vnet` already supports it." Tasks T001â€“T003 evaluate:
 - **Route Table** (`module "route_table"`): Core pattern creates firewall + user-subnet route tables internally. Remove if no additional custom route tables needed beyond core pattern scope.
 - **Private DNS Zone** (`module "private_dns_zone"`): Core pattern manages private link DNS zones, auto-registration, VNet links, resolution policies, DNS resolver. Remove if no additional custom DNS zones needed beyond core pattern scope.
-- **Private DNS Zone Link** (`module "private_dns_zone_link"`): Core pattern manages its own zone links. Remove if BYO zone links are not needed.
+- **Private DNS Zone Virtual Network Link** (`module "private_dns_zone_virtual_network_link"`): Core pattern manages its own zone links. Remove if BYO zone links are not needed.
 
 ### terraform-docs Notes
 

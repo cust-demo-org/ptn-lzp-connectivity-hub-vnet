@@ -76,7 +76,7 @@ variable "private_dns_zones" {
   description = "Map of private DNS zones to create. Refer to the main pattern module variable descriptions for complete details."
 }
 
-variable "byo_private_dns_zone_links" {
+variable "byo_private_dns_zone_virtual_network_links" {
   type        = any
   default     = {}
   description = "Map of BYO private DNS zone VNet links. Refer to the main pattern module variable descriptions for complete details."
