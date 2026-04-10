@@ -144,7 +144,7 @@ map(object({
 
 The following input variables are optional (have default values):
 
-### <a name="input_byo_private_dns_zone_links"></a> [byo\_private\_dns\_zone\_links](#input\_byo\_private\_dns\_zone\_links)
+### <a name="input_byo_private_dns_zone_virtual_network_links"></a> [byo\_private\_dns\_zone\_virtual\_network\_links](#input\_byo\_private\_dns\_zone\_virtual\_network\_links)
 
 Description: A map of VNet links to existing (bring-your-own) Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
@@ -904,7 +904,7 @@ Description: A map of Private DNS Zones to create and optionally link to VNets c
 
 - `tags` - (Optional) Tags to apply to this DNS zone. Defaults to `{}`.
 
-> **Pattern note:** Tags in `tags` and `virtual_network_links[].tags` are merged with `var.tags`. For linking to existing (BYO) Private DNS Zones not managed by this pattern, use `byo_private_dns_zone_links` instead.
+> **Pattern note:** Tags in `tags` and `virtual_network_links[].tags` are merged with `var.tags`. For linking to existing (BYO) Private DNS Zones not managed by this pattern, use `byo_private_dns_zone_virtual_network_links` instead.
 
 Type:
 
@@ -1938,7 +1938,7 @@ Source: Azure/avm-res-network-privatednszone/azurerm
 
 Version: 0.5.0
 
-### <a name="module_private_dns_zone_link"></a> [private\_dns\_zone\_link](#module\_private\_dns\_zone\_link)
+### <a name="module_private_dns_zone_virtual_network_link"></a> [private\_dns\_zone\_virtual\_network\_link](#module\_private\_dns\_zone\_virtual\_network\_link)
 
 Source: Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link
 

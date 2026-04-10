@@ -27,7 +27,7 @@ The pattern architecture has been fundamentally changed from a monolithic core A
 | Firewall Policy | `Azure/avm-res-network-firewallpolicy/azurerm` | 0.3.4 | ⬜ Stub — needs full passthrough implementation |
 | Firewall | `Azure/avm-res-network-azurefirewall/azurerm` | 0.4.0 | ⬜ Stub — needs full passthrough implementation |
 | Private DNS Zone | `Azure/avm-res-network-privatednszone/azurerm` | 0.5.0 | ✅ Fully implemented |
-| Private DNS Zone Link | `Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link` | 0.5.0 | ✅ Fully implemented |
+| Private DNS Zone Virtual Network Link | `Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link` | 0.5.0 | ✅ Fully implemented |
 | Network Watcher | `Azure/avm-res-network-networkwatcher/azurerm` | 0.3.2 | ✅ Fully implemented |
 
 ### Variable Interface Changes
@@ -43,7 +43,7 @@ The monolithic `hub_virtual_networks` variable is replaced with individual flat 
 | `timeouts` | Removed (root-level) | Per-resource in individual variables |
 | — | `route_tables` | Restored from Simplification Amendment |
 | — | `private_dns_zones` | Restored from Simplification Amendment |
-| — | `byo_private_dns_zone_links` | Restored from Simplification Amendment |
+| — | `byo_private_dns_zone_virtual_network_links` | Restored from Simplification Amendment |
 
 ### Key Resolution Pattern
 
@@ -87,7 +87,7 @@ The Simplification Amendment is partially superseded — modules removed because
 **Date**: 2026-03-30
 
 The pattern has been simplified to remove supplementary modules whose capabilities are already handled by the core pattern or belong outside the pattern scope:
-- **Removed modules**: log_analytics_workspace, route_table, private_dns_zone, private_dns_zone_link, managed_identity, storage_account, role_assignment, azurerm_virtual_network_peering
+- **Removed modules**: log_analytics_workspace, route_table, private_dns_zone, private_dns_zone_virtual_network_link, managed_identity, storage_account, role_assignment, azurerm_virtual_network_peering
 - **Removed provider**: `random ~> 3.0`
 - **Remaining providers**: `azurerm ~> 4.0`, `azapi ~> 2.0`
 - **Remaining supplementary modules**: resource_group (0.2.2), network_security_group (0.5.1), nat_gateway (0.3.2), network_watcher (0.3.2)

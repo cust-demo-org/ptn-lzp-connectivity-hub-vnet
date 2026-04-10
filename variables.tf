@@ -1636,7 +1636,7 @@ variable "private_dns_zones" {
 
     - `tags` - (Optional) Tags to apply to this DNS zone. Defaults to `{}`.
 
-    > **Pattern note:** Tags in `tags` and `virtual_network_links[].tags` are merged with `var.tags`. For linking to existing (BYO) Private DNS Zones not managed by this pattern, use `byo_private_dns_zone_links` instead.
+    > **Pattern note:** Tags in `tags` and `virtual_network_links[].tags` are merged with `var.tags`. For linking to existing (BYO) Private DNS Zones not managed by this pattern, use `byo_private_dns_zone_virtual_network_links` instead.
   EOT
 
   validation {
@@ -1649,7 +1649,7 @@ variable "private_dns_zones" {
   }
 }
 
-variable "byo_private_dns_zone_links" {
+variable "byo_private_dns_zone_virtual_network_links" {
   type = map(object({
     name                = string
     private_dns_zone_id = string

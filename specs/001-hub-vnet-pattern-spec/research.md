@@ -44,7 +44,7 @@ By decomposing to individual AVM resource modules, the wrapper gains:
 | Firewall Policy | `Azure/avm-res-network-firewallpolicy/azurerm` | 0.3.4 | Create firewall policies (DNS proxy, IDPS, TLS) |
 | Firewall | `Azure/avm-res-network-azurefirewall/azurerm` | 0.4.0 | Create Azure Firewalls |
 | Private DNS Zone | `Azure/avm-res-network-privatednszone/azurerm` | 0.5.0 | Create private DNS zones with VNet links |
-| Private DNS Zone Link | `Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link` | 0.5.0 | Link BYO DNS zones to VNets |
+| Private DNS Zone Virtual Network Link | `Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link` | 0.5.0 | Link BYO DNS zones to VNets |
 | Network Watcher | `Azure/avm-res-network-networkwatcher/azurerm` | 0.3.2 | Create Network Watcher with flow logs |
 
 **Alternatives Considered**: Continued use of the pattern module with workarounds — rejected due to fundamental architectural constraints described above.
@@ -210,7 +210,7 @@ examples/
 | Network Security Group module | ✅ Complete | No change |
 | Route Table module | ✅ Present | Review if still needed — core pattern creates route tables internally |
 | Private DNS Zone module | ✅ Present | Review if still needed — core pattern manages private DNS zones internally |
-| Private DNS Zone Link module | ✅ Present | Review if still needed |
+| Private DNS Zone Virtual Network Link module | ✅ Present | Review if still needed |
 | Managed Identity module | ✅ Present | Update version 0.4.0 → 0.5.0 |
 | Storage Account module | ✅ Present | Update version 0.6.7 → 0.6.8 |
 | Role Assignment module | ✅ Present | No change |
@@ -288,7 +288,7 @@ examples/
 
 ## R-010: Module Instances Beyond Spec Scope
 
-**Decision**: Retain route_table, private_dns_zone, private_dns_zone_link, managed_identity, and role_assignment modules as they serve valid purposes beyond the core pattern's scope.
+**Decision**: Retain route_table, private_dns_zone, private_dns_zone_virtual_network_link, managed_identity, and role_assignment modules as they serve valid purposes beyond the core pattern's scope.
 
 **Rationale**: 
 - **Route Tables**: The core pattern creates firewall and user-subnet route tables, but additional custom route tables may be needed for specific routing scenarios (e.g., forced tunneling through NVAs). The existing module uses the same flat map pattern.

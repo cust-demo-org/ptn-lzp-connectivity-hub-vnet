@@ -43,7 +43,7 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_byo_private_dns_zone_links"></a> [byo\_private\_dns\_zone\_links](#input\_byo\_private\_dns\_zone\_links)
+### <a name="input_byo_private_dns_zone_virtual_network_links"></a> [byo\_private\_dns\_zone\_virtual\_network\_links](#input\_byo\_private\_dns\_zone\_virtual\_network\_links)
 
 Description: Map of BYO private DNS zone VNet links. Refer to the main pattern module variable descriptions for complete details.
 

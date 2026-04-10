@@ -249,6 +249,6 @@ firewalls = {
 # --------------------------------------------------------------------------
 # Flow logs are configured dynamically in main.tf locals, referencing the
 # external storage account created alongside the pattern module. See main.tf
-# for the flowlog_configuration, byo_private_dns_zone_links, and VNet
+# for the flowlog_configuration, byo_private_dns_zone_virtual_network_links, and VNet
 # peering cross-references.
 # --------------------------------------------------------------------------
