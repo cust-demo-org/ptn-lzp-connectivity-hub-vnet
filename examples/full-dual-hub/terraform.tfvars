@@ -21,6 +21,11 @@
 #   - VNet peering: both hub VNets ↔ flowlog VNet
 #   - BYO DNS zone links: blob DNS zone → both hub VNets
 #   - Flow logs: both hub VNets → external storage account
+
+# Usually external resources would already be created, but are included inline here
+# for visibility and simplicity in the example. In a real deployment, only 
+# tfvars would be needed to reference these external resources from the pattern module
+# using their resource IDs.
 # --------------------------------------------------------------------------
 
 location = "southeastasia"
