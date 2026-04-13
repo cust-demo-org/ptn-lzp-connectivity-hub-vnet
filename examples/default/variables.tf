@@ -75,10 +75,10 @@ variable "private_dns_zones" {
   description = "Map of private DNS zones to create. Refer to the main pattern module variable descriptions for complete details."
 }
 
-variable "byo_private_dns_zone_virtual_network_links" {
+variable "byo_private_dns_zones" {
   type        = any
   default     = {}
-  description = "Map of BYO private DNS zone VNet links. Refer to the main pattern module variable descriptions for complete details."
+  description = "Map of BYO private DNS zones with virtual network links. Refer to the main pattern module variable descriptions for complete details."
 }
 
 variable "flowlog_configuration" {

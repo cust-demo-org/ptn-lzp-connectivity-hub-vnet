@@ -109,20 +109,23 @@ locals {
     })
   }
 
-  # BYO DNS zone links — connect external blob DNS zone to each hub VNet
-  byo_private_dns_zone_virtual_network_links = merge(var.byo_private_dns_zone_virtual_network_links, {
-    link_blob_internet = {
-      name                = "link-blob-to-internet"
+  # BYO DNS zones — connect external blob DNS zone to each hub VNet
+  byo_private_dns_zones = merge(var.byo_private_dns_zones, {
+    blob = {
       private_dns_zone_id = azurerm_private_dns_zone.blob.id
-      virtual_network = {
-        key = "vnet_internet"
-      }
-    }
-    link_blob_intranet = {
-      name                = "link-blob-to-intranet"
-      private_dns_zone_id = azurerm_private_dns_zone.blob.id
-      virtual_network = {
-        key = "vnet_intranet"
+      virtual_network_links = {
+        link_blob_internet = {
+          name = "link-blob-to-internet"
+          virtual_network = {
+            key = "vnet_internet"
+          }
+        }
+        link_blob_intranet = {
+          name = "link-blob-to-intranet"
+          virtual_network = {
+            key = "vnet_intranet"
+          }
+        }
       }
     }
   })
@@ -169,22 +172,22 @@ locals {
 module "hub" {
   source = "../../"
 
-  location                                   = var.location
-  tags                                       = var.tags
-  enable_telemetry                           = var.enable_telemetry
-  resource_groups                            = var.resource_groups
-  network_security_groups                    = var.network_security_groups
-  nat_gateways                               = var.nat_gateways
-  route_tables                               = var.route_tables
-  virtual_networks                           = local.virtual_networks
-  public_ips                                 = var.public_ips
-  firewall_policies                          = var.firewall_policies
-  firewalls                                  = var.firewalls
-  virtual_network_gateways                   = var.virtual_network_gateways
-  private_dns_resolvers                      = var.private_dns_resolvers
-  private_dns_zones                          = var.private_dns_zones
-  byo_private_dns_zone_virtual_network_links = local.byo_private_dns_zone_virtual_network_links
-  flowlog_configuration                      = local.flowlog_configuration
+  location                 = var.location
+  tags                     = var.tags
+  enable_telemetry         = var.enable_telemetry
+  resource_groups          = var.resource_groups
+  network_security_groups  = var.network_security_groups
+  nat_gateways             = var.nat_gateways
+  route_tables             = var.route_tables
+  virtual_networks         = local.virtual_networks
+  public_ips               = var.public_ips
+  firewall_policies        = var.firewall_policies
+  firewalls                = var.firewalls
+  virtual_network_gateways = var.virtual_network_gateways
+  private_dns_resolvers    = var.private_dns_resolvers
+  private_dns_zones        = var.private_dns_zones
+  byo_private_dns_zones    = local.byo_private_dns_zones
+  flowlog_configuration    = local.flowlog_configuration
 
   depends_on = [azurerm_virtual_network.flowlog, azurerm_subnet.pep, azurerm_storage_account.flowlog, azurerm_private_dns_zone.blob]
 }

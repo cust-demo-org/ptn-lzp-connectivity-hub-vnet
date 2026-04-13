@@ -14,7 +14,7 @@ The pattern no longer uses the monolithic core AVM pattern module. All resources
 
 - **Route Table** — Now an independent AVM resource module (`avm-res-network-routetable` v0.5.0). Flat global map variable `route_tables`.
 - **Private DNS Zone** — Now an independent AVM resource module (`avm-res-network-privatednszone` v0.5.0). Flat global map variable `private_dns_zones` with embedded VNet links.
-- **Private DNS Zone Virtual Network Link (BYO)** — BYO DNS zone VNet links via `byo_private_dns_zone_virtual_network_links`.
+- **Private DNS Zone (BYO)** — BYO DNS zones with nested VNet links via `byo_private_dns_zones`.
 
 ### Entities Added
 
