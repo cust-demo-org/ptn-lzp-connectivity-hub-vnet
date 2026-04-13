@@ -47,12 +47,14 @@ resource "azurerm_subnet" "pep" {
 }
 
 resource "azurerm_storage_account" "flowlog" {
-  name                     = "stflowlogsdh${random_integer.suffix.result}"
-  resource_group_name      = azurerm_resource_group.flowlog.name
-  location                 = azurerm_resource_group.flowlog.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = var.tags
+  name                            = "stflowlogsdh${random_integer.suffix.result}"
+  resource_group_name             = azurerm_resource_group.flowlog.name
+  location                        = azurerm_resource_group.flowlog.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = false
+  shared_access_key_enabled       = false
+  tags                            = var.tags
 }
 
 resource "azurerm_private_dns_zone" "blob" {
@@ -125,21 +127,10 @@ locals {
     }
   })
 
-  # Flow log configuration referencing the external storage account
-  # NOTE: The AVM network_watcher module performs a data lookup for an existing
-  # Network Watcher. Azure auto-creates NetworkWatcher_<region> in
-  # NetworkWatcherRG when VNets are deployed. To enable flow logs, first deploy
-  # without flowlog_configuration, flowlog_configuration = null, then uncomment the block below after the
-  # auto-created Network Watcher exists.
-  #
-  # The network_watcher_id, network_watcher_name, and resource_group_name fields
-  # are optional — they default to the Azure standard NetworkWatcherRG /
-  # NetworkWatcher_<location>.
-  # flowlog_configuration = null
+  # Flow log configuration referencing the external storage account.
+  # The pattern module includes a time_sleep after VNet creation to allow Azure
+  # to auto-provision the Network Watcher, so this works in a single apply.
   flowlog_configuration = {
-    network_watcher_id   = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/NetworkWatcherRG/providers/Microsoft.Network/networkWatchers/NetworkWatcher_${var.location}"
-    network_watcher_name = "NetworkWatcher_${var.location}"
-    resource_group_name  = "NetworkWatcherRG"
     flow_logs = {
       fl_internet = {
         enabled = true
@@ -152,6 +143,7 @@ locals {
           enabled = true
           days    = 90
         }
+        version = 2
       }
       fl_intranet = {
         enabled = true
@@ -164,6 +156,7 @@ locals {
           enabled = true
           days    = 90
         }
+        version = 2
       }
     }
   }

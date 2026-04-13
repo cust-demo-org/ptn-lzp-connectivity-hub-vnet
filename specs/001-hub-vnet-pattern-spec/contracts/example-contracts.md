@@ -264,6 +264,8 @@ locals {
   })
 
   # Flow logs → external storage account
+  # The pattern includes a time_sleep after VNet creation to wait for the
+  # auto-provisioned Network Watcher, enabling single-step deployment.
   flowlog_configuration = {
     location = var.location
     flow_logs = {
