@@ -87,3 +87,9 @@ variable "flowlog_configuration" {
   default     = null
   description = "Network Watcher flow log configuration. Null disables flow logs. Refer to the main pattern module variable descriptions for complete details."
 }
+
+variable "private_dns_resolvers" {
+  type        = any
+  default     = {}
+  description = "Map of Private DNS Resolvers to create. Refer to the main pattern module variable descriptions for complete details."
+}

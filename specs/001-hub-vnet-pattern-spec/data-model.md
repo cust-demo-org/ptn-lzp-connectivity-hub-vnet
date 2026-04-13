@@ -299,6 +299,22 @@ The entity diagram and descriptions below are preserved for historical context. 
 
 ---
 
+### E-009: Private DNS Resolver (Supplementary)
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `name` | `string` | Yes | — | DNS Resolver name |
+| `resource_group_key` | `string` | Yes | — | Resource group cross-reference |
+| `virtual_network` | `object({ key, resource_id })` | Yes | — | VNet to deploy the resolver into |
+| `inbound_endpoints` | `map(object(...))` | No | `{}` | Inbound endpoints (subnet = { key, name }) |
+| `outbound_endpoints` | `map(object(...))` | No | `{}` | Outbound endpoints with forwarding rulesets (subnet = { key, name }) |
+| `outbound_endpoints[*].forwarding_ruleset[*].additional_virtual_network_links[*].virtual_network` | `object({ key, resource_id })` | Yes (per link) | — | VNet reference for additional ruleset links |
+
+**Key**: Arbitrary map key in `var.private_dns_resolvers`.
+**Relationships**: References VNet by `virtual_network.key`, resource group by `resource_group_key`. Forwarding ruleset additional VNet links reference VNets by `virtual_network.key`.
+
+---
+
 ## Key Resolution Pattern
 
 All cross-resource wiring uses the same pattern:

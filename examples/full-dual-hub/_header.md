@@ -15,6 +15,7 @@ This deploys a dual-hub topology — an internet egress/ingress hub and an intra
 - Dual-hub VNets with firewall (Standard SKU, forced tunnelling with management IP)
 - NAT Gateway on internet hub with pattern-managed public IP
 - Two NSGs — one per hub, associated via `network_security_group = { key }`
+- Private DNS Resolver on internet hub with inbound endpoint, outbound endpoint, and forwarding ruleset linked to intranet VNet
 - VNet peering from hub VNets to external flowlog VNet (with reverse peering)
 - External storage account with blob private endpoint for flow log storage
 - BYO private dns zone virtual network links connecting external blob DNS zone to pattern VNets

@@ -83,6 +83,20 @@ resource "terraform_data" "validation" {
       ])
       error_message = "One or more byo_private_dns_zone_virtual_network_links reference a virtual_network.key that does not exist in var.virtual_networks."
     }
+    precondition {
+      condition = alltrue([
+        for key, v in var.private_dns_resolvers :
+        contains(keys(var.resource_groups), v.resource_group_key)
+      ])
+      error_message = "One or more private_dns_resolvers entries reference a resource_group_key that does not exist in var.resource_groups."
+    }
+    precondition {
+      condition = alltrue([
+        for key, v in var.private_dns_resolvers :
+        v.virtual_network.key == null || contains(keys(var.virtual_networks), v.virtual_network.key)
+      ])
+      error_message = "One or more private_dns_resolvers entries reference a virtual_network.key that does not exist in var.virtual_networks."
+    }
   }
 }
 
@@ -476,6 +490,73 @@ module "firewall" {
       principal_type                         = ra.principal_type
     }
   }
+}
+
+module "private_dns_resolver" {
+  source  = "Azure/avm-res-network-dnsresolver/azurerm"
+  version = "0.8.0"
+
+  for_each = var.private_dns_resolvers
+
+  name                = each.value.name
+  resource_group_name = local.resource_group_names[each.value.resource_group_key]
+  location            = coalesce(each.value.location, var.location)
+  virtual_network_resource_id = each.value.virtual_network.key != null ? (
+    local.vnet_resource_ids[each.value.virtual_network.key]
+  ) : each.value.virtual_network.resource_id
+  inbound_endpoints = {
+    for iep_key, iep in each.value.inbound_endpoints : iep_key => {
+      name = iep.name
+      subnet_name = iep.subnet.key != null ? (
+        var.virtual_networks[each.value.virtual_network.key].subnets[iep.subnet.key].name
+      ) : iep.subnet.name
+      private_ip_allocation_method = iep.private_ip_allocation_method
+      private_ip_address           = iep.private_ip_address
+      tags                         = iep.tags
+    }
+  }
+  outbound_endpoints = {
+    for oep_key, oep in each.value.outbound_endpoints : oep_key => {
+      name = oep.name
+      subnet_name = oep.subnet.key != null ? (
+        var.virtual_networks[each.value.virtual_network.key].subnets[oep.subnet.key].name
+      ) : oep.subnet.name
+      tags = oep.tags
+      forwarding_ruleset = oep.forwarding_ruleset != null ? {
+        for rs_key, rs in oep.forwarding_ruleset : rs_key => {
+          name                                                = rs.name
+          link_with_outbound_endpoint_virtual_network         = rs.link_with_outbound_endpoint_virtual_network
+          metadata_for_outbound_endpoint_virtual_network_link = rs.metadata_for_outbound_endpoint_virtual_network_link
+          tags                                                = rs.tags
+          additional_virtual_network_links = {
+            for link_key, link in rs.additional_virtual_network_links : link_key => {
+              name = link.name
+              vnet_id = link.virtual_network.key != null ? (
+                local.vnet_resource_ids[link.virtual_network.key]
+              ) : link.virtual_network.resource_id
+              metadata = link.metadata
+            }
+          }
+          rules = rs.rules
+        }
+      } : null
+    }
+  }
+  lock = each.value.lock
+  role_assignments = {
+    for ra_key, ra in each.value.role_assignments : ra_key => {
+      role_definition_id_or_name             = ra.role_definition_id_or_name
+      principal_id                           = ra.assign_to_caller ? data.azurerm_client_config.current.object_id : ra.principal_id
+      description                            = ra.description
+      skip_service_principal_aad_check       = ra.skip_service_principal_aad_check
+      condition                              = ra.condition
+      condition_version                      = ra.condition_version
+      delegated_managed_identity_resource_id = ra.delegated_managed_identity_resource_id
+      principal_type                         = ra.principal_type
+    }
+  }
+  tags             = merge(var.tags, each.value.tags)
+  enable_telemetry = var.enable_telemetry
 }
 
 module "private_dns_zone" {
