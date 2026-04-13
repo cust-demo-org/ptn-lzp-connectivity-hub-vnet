@@ -30,6 +30,16 @@ output "private_dns_zone_ids" {
   description = "A map of private DNS zone key to Private DNS Zone resource ID."
 }
 
+output "private_dns_resolver_ids" {
+  value       = local.dns_resolver_resource_ids
+  description = "A map of private DNS resolver key to DNS Resolver resource ID."
+}
+
+output "private_dns_resolver_inbound_endpoint_ips" {
+  value       = { for key, mod in module.private_dns_resolver : key => mod.inbound_endpoint_ips }
+  description = "A map of private DNS resolver key to a map of inbound endpoint key to private IP address."
+}
+
 output "virtual_network_gateway_ids" {
   value       = { for key, mod in module.virtual_network_gateway : key => mod.resource_id }
   description = "A map of virtual network gateway key to VNet Gateway resource ID."

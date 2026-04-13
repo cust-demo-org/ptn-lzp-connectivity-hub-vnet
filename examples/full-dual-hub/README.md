@@ -17,6 +17,7 @@ This deploys a dual-hub topology — an internet egress/ingress hub and an intra
 - Dual-hub VNets with firewall (Standard SKU, forced tunnelling with management IP)
 - NAT Gateway on internet hub with pattern-managed public IP
 - Two NSGs — one per hub, associated via `network_security_group = { key }`
+- Private DNS Resolver on internet hub with inbound endpoint, outbound endpoint, and forwarding ruleset linked to intranet VNet
 - VNet peering from hub VNets to external flowlog VNet (with reverse peering)
 - External storage account with blob private endpoint for flow log storage
 - BYO private dns zone virtual network links connecting external blob DNS zone to pattern VNets
@@ -125,6 +126,14 @@ Type: `any`
 
 Default: `{}`
 
+### <a name="input_private_dns_resolvers"></a> [private\_dns\_resolvers](#input\_private\_dns\_resolvers)
+
+Description: Map of Private DNS Resolvers to create. Refer to the main pattern module variable descriptions for complete details.
+
+Type: `any`
+
+Default: `{}`
+
 ### <a name="input_private_dns_zones"></a> [private\_dns\_zones](#input\_private\_dns\_zones)
 
 Description: Map of private DNS zones to create. Refer to the main pattern module variable descriptions for complete details.
@@ -204,6 +213,14 @@ Description: Network Watcher resource ID.
 ### <a name="output_nsg_resource_ids"></a> [nsg\_resource\_ids](#output\_nsg\_resource\_ids)
 
 Description: Network Security Group resource IDs.
+
+### <a name="output_private_dns_resolver_ids"></a> [private\_dns\_resolver\_ids](#output\_private\_dns\_resolver\_ids)
+
+Description: Private DNS Resolver resource IDs.
+
+### <a name="output_private_dns_resolver_inbound_endpoint_ips"></a> [private\_dns\_resolver\_inbound\_endpoint\_ips](#output\_private\_dns\_resolver\_inbound\_endpoint\_ips)
+
+Description: Private DNS Resolver inbound endpoint IP addresses.
 
 ### <a name="output_public_ip_ids"></a> [public\_ip\_ids](#output\_public\_ip\_ids)
 

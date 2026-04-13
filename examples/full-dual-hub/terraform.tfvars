@@ -12,6 +12,7 @@
 #   - 5 public IPs (2 FW normal + 2 FW management + 1 NAT GW)
 #   - 2 firewall policies (internet + intranet)
 #   - 2 firewalls (internet + intranet)
+#   - 1 DNS resolver (internet hub, inbound + outbound + forwarding ruleset)
 #
 # External resources (created in main.tf, wired via cross-references):
 #   - 1 resource group (rg-flowlog-dualhub)
@@ -129,6 +130,26 @@ virtual_networks = {
       AzureFirewallManagementSubnet = {
         name             = "AzureFirewallManagementSubnet"
         address_prefixes = ["10.0.0.64/26"]
+      }
+      snet_dns_inbound = {
+        name             = "snet-dns-inbound"
+        address_prefixes = ["10.0.2.0/28"]
+        delegation = [{
+          name = "Microsoft.Network.dnsResolvers"
+          service_delegation = {
+            name = "Microsoft.Network/dnsResolvers"
+          }
+        }]
+      }
+      snet_dns_outbound = {
+        name             = "snet-dns-outbound"
+        address_prefixes = ["10.0.2.16/28"]
+        delegation = [{
+          name = "Microsoft.Network.dnsResolvers"
+          service_delegation = {
+            name = "Microsoft.Network/dnsResolvers"
+          }
+        }]
       }
     }
   }
@@ -253,3 +274,55 @@ firewalls = {
 # for the flowlog_configuration, byo_private_dns_zone_virtual_network_links, and VNet
 # peering cross-references.
 # --------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
+# Private DNS Resolvers
+# --------------------------------------------------------------------------
+private_dns_resolvers = {
+  resolver_internet = {
+    name               = "dnspr-internet-dualhub"
+    resource_group_key = "rg_connectivity"
+    virtual_network = {
+      key = "vnet_internet"
+    }
+    inbound_endpoints = {
+      inbound = {
+        name = "in-internet-inbound"
+        subnet = {
+          key = "snet_dns_inbound"
+        }
+      }
+    }
+    outbound_endpoints = {
+      outbound = {
+        name = "out-internet-outbound"
+        subnet = {
+          key = "snet_dns_outbound"
+        }
+        forwarding_ruleset = {
+          default = {
+            name = "frs-internet-default"
+            rules = {
+              onprem = {
+                name        = "onprem-contoso"
+                domain_name = "contoso.com."
+                destination_ip_addresses = {
+                  "10.100.0.4" = "53"
+                  "10.100.0.5" = "53"
+                }
+              }
+            }
+            additional_virtual_network_links = {
+              link_intranet = {
+                name = "link-frs-to-intranet"
+                virtual_network = {
+                  key = "vnet_intranet"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

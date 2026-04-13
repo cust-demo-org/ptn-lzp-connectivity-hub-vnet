@@ -181,6 +181,7 @@ module "hub" {
   firewall_policies                          = var.firewall_policies
   firewalls                                  = var.firewalls
   virtual_network_gateways                   = var.virtual_network_gateways
+  private_dns_resolvers                      = var.private_dns_resolvers
   private_dns_zones                          = var.private_dns_zones
   byo_private_dns_zone_virtual_network_links = local.byo_private_dns_zone_virtual_network_links
   flowlog_configuration                      = local.flowlog_configuration

@@ -888,6 +888,135 @@ Type: `string`
 
 Default: `"120s"`
 
+### <a name="input_private_dns_resolvers"></a> [private\_dns\_resolvers](#input\_private\_dns\_resolvers)
+
+Description: A map of Private DNS Resolvers to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `name` - (Required) The name of the DNS Resolver.
+- `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this resolver will be deployed. **Pattern cross-reference**: resolves to the resource group name via `var.resource_groups`.
+- `location` - (Optional) The Azure region for the resolver. Defaults to `var.location`.
+- `virtual_network` - (Required) The virtual network to deploy the resolver into. Provide exactly one of `key` or `resource_id`.
+  - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+  - `resource_id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+- `inbound_endpoints` - (Optional) A map of inbound endpoints. The map key is deliberately arbitrary. Defaults to `{}`.
+  - `name` - (Optional) The name of the inbound endpoint.
+  - `subnet` - (Required) The subnet within the referenced virtual network for the inbound endpoint. Must be delegated to `Microsoft.Network/dnsResolvers`. Provide exactly one of `key` or `name`.
+    - `key` - (Optional) The key of the subnet in the `virtual_networks[].subnets` map. **Pattern cross-reference**: resolves to the Azure subnet name via `var.virtual_networks[vnet_key].subnets[subnet_key].name`.
+    - `name` - (Optional) The Azure name of the subnet (e.g., `"snet-dns-inbound"`). Use this for subnets not managed via the pattern's `virtual_networks` variable.
+  - `private_ip_allocation_method` - (Optional) The allocation method for the private IP. Possible values are `"Dynamic"` or `"Static"`. Defaults to `"Dynamic"`.
+  - `private_ip_address` - (Optional) The static private IP address when `private_ip_allocation_method` is `"Static"`.
+  - `tags` - (Optional) Tags for the inbound endpoint.
+- `outbound_endpoints` - (Optional) A map of outbound endpoints. The map key is deliberately arbitrary. Defaults to `{}`.
+  - `name` - (Optional) The name of the outbound endpoint.
+  - `subnet` - (Required) The subnet within the referenced virtual network for the outbound endpoint. Must be delegated to `Microsoft.Network/dnsResolvers`. Provide exactly one of `key` or `name`.
+    - `key` - (Optional) The key of the subnet in the `virtual_networks[].subnets` map. **Pattern cross-reference**: resolves to the Azure subnet name via `var.virtual_networks[vnet_key].subnets[subnet_key].name`.
+    - `name` - (Optional) The Azure name of the subnet (e.g., `"snet-dns-outbound"`). Use this for subnets not managed via the pattern's `virtual_networks` variable.
+  - `tags` - (Optional) Tags for the outbound endpoint.
+  - `forwarding_ruleset` - (Optional) A map of forwarding rulesets to create for this outbound endpoint. Defaults to `null`.
+    - `name` - (Optional) The name of the forwarding ruleset.
+    - `link_with_outbound_endpoint_virtual_network` - (Optional) Whether to auto-link the ruleset with the outbound endpoint's VNet. Defaults to `true`.
+    - `metadata_for_outbound_endpoint_virtual_network_link` - (Optional) Metadata for the auto-created VNet link.
+    - `tags` - (Optional) Tags for the forwarding ruleset.
+    - `additional_virtual_network_links` - (Optional) Additional VNet links for the forwarding ruleset. Defaults to `{}`.
+      - `name` - (Optional) The name of the link.
+      - `virtual_network` - (Required) The virtual network to link. Provide exactly one of `key` or `resource_id`.
+        - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the VNet resource ID via `local.vnet_resource_ids`.
+        - `resource_id` - (Optional) The resource ID of an existing virtual network.
+      - `metadata` - (Optional) Metadata for the link.
+    - `rules` - (Optional) A map of forwarding rules. Defaults to `null`.
+      - `name` - (Optional) The name of the rule.
+      - `domain_name` - (Required) The domain name to forward (e.g., `"contoso.com."`).
+      - `destination_ip_addresses` - (Required) A map where key is the IP address and value is the port (e.g., `{ "10.0.0.4" = "53" }`).
+      - `enabled` - (Optional) Whether the rule is enabled. Defaults to `true`.
+      - `metadata` - (Optional) Metadata for the rule.
+- `lock` - (Optional) Controls the Resource Lock configuration for this resource.
+  - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+  - `name` - (Optional) The name of the lock.
+- `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary.
+  - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign.
+  - `principal_id` - (Optional) The ID of the principal. Mutually exclusive with `assign_to_caller`.
+  - `assign_to_caller` - (Optional) When `true`, uses the Terraform caller's identity. Defaults to `false`.
+  - `description` - (Optional) The description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Skip AAD check for service principals. Defaults to `false`.
+  - `condition` - (Optional) The condition for the role assignment.
+  - `condition_version` - (Optional) Condition version. Valid values: `"2.0"`.
+  - `delegated_managed_identity_resource_id` - (Optional) Delegated managed identity resource ID.
+  - `principal_type` - (Optional) The type of the principal. Possible values: `"User"`, `"Group"`, `"ServicePrincipal"`.
+- `tags` - (Optional) Tags to apply to the resolver. Defaults to `{}`.
+
+> **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`. Endpoint subnets can be referenced by `key` (map key in `virtual_networks[].subnets`) or `name` (Azure subnet name). Subnets must be delegated to `Microsoft.Network/dnsResolvers`.
+
+Type:
+
+```hcl
+map(object({
+    name               = string
+    resource_group_key = string
+    location           = optional(string)
+    virtual_network = object({
+      key         = optional(string)
+      resource_id = optional(string)
+    })
+    inbound_endpoints = optional(map(object({
+      name = optional(string)
+      subnet = object({
+        key  = optional(string)
+        name = optional(string)
+      })
+      private_ip_allocation_method = optional(string, "Dynamic")
+      private_ip_address           = optional(string)
+      tags                         = optional(map(string))
+    })), {})
+    outbound_endpoints = optional(map(object({
+      name = optional(string)
+      subnet = object({
+        key  = optional(string)
+        name = optional(string)
+      })
+      tags = optional(map(string))
+      forwarding_ruleset = optional(map(object({
+        name                                                = optional(string)
+        link_with_outbound_endpoint_virtual_network         = optional(bool, true)
+        metadata_for_outbound_endpoint_virtual_network_link = optional(map(string))
+        tags                                                = optional(map(string))
+        additional_virtual_network_links = optional(map(object({
+          name = optional(string)
+          virtual_network = object({
+            key         = optional(string)
+            resource_id = optional(string)
+          })
+          metadata = optional(map(string))
+        })), {})
+        rules = optional(map(object({
+          name                     = optional(string)
+          domain_name              = string
+          destination_ip_addresses = map(string)
+          enabled                  = optional(bool, true)
+          metadata                 = optional(map(string))
+        })))
+      })))
+    })), {})
+    lock = optional(object({
+      kind = string
+      name = optional(string, null)
+    }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = optional(string)
+      assign_to_caller                       = optional(bool, false)
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string), {})
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_private_dns_zones"></a> [private\_dns\_zones](#input\_private\_dns\_zones)
 
 Description: A map of Private DNS Zones to create and optionally link to VNets created by this pattern. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -1888,6 +2017,14 @@ Description: The resource ID of the Network Watcher, or null if not created.
 
 Description: A map of NSG key to Network Security Group resource ID.
 
+### <a name="output_private_dns_resolver_ids"></a> [private\_dns\_resolver\_ids](#output\_private\_dns\_resolver\_ids)
+
+Description: A map of private DNS resolver key to DNS Resolver resource ID.
+
+### <a name="output_private_dns_resolver_inbound_endpoint_ips"></a> [private\_dns\_resolver\_inbound\_endpoint\_ips](#output\_private\_dns\_resolver\_inbound\_endpoint\_ips)
+
+Description: A map of private DNS resolver key to a map of inbound endpoint key to private IP address.
+
 ### <a name="output_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#output\_private\_dns\_zone\_ids)
 
 Description: A map of private DNS zone key to Private DNS Zone resource ID.
@@ -1949,6 +2086,12 @@ Version: 0.5.1
 Source: Azure/avm-res-network-networkwatcher/azurerm
 
 Version: 0.3.2
+
+### <a name="module_private_dns_resolver"></a> [private\_dns\_resolver](#module\_private\_dns\_resolver)
+
+Source: Azure/avm-res-network-dnsresolver/azurerm
+
+Version: 0.8.0
 
 ### <a name="module_private_dns_zone"></a> [private\_dns\_zone](#module\_private\_dns\_zone)
 

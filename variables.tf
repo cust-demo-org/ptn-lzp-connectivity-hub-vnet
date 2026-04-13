@@ -1569,6 +1569,138 @@ variable "firewalls" {
   EOT
 }
 
+variable "private_dns_resolvers" {
+  type = map(object({
+    name               = string
+    resource_group_key = string
+    location           = optional(string)
+    virtual_network = object({
+      key         = optional(string)
+      resource_id = optional(string)
+    })
+    inbound_endpoints = optional(map(object({
+      name = optional(string)
+      subnet = object({
+        key  = optional(string)
+        name = optional(string)
+      })
+      private_ip_allocation_method = optional(string, "Dynamic")
+      private_ip_address           = optional(string)
+      tags                         = optional(map(string))
+    })), {})
+    outbound_endpoints = optional(map(object({
+      name = optional(string)
+      subnet = object({
+        key  = optional(string)
+        name = optional(string)
+      })
+      tags = optional(map(string))
+      forwarding_ruleset = optional(map(object({
+        name                                                = optional(string)
+        link_with_outbound_endpoint_virtual_network         = optional(bool, true)
+        metadata_for_outbound_endpoint_virtual_network_link = optional(map(string))
+        tags                                                = optional(map(string))
+        additional_virtual_network_links = optional(map(object({
+          name = optional(string)
+          virtual_network = object({
+            key         = optional(string)
+            resource_id = optional(string)
+          })
+          metadata = optional(map(string))
+        })), {})
+        rules = optional(map(object({
+          name                     = optional(string)
+          domain_name              = string
+          destination_ip_addresses = map(string)
+          enabled                  = optional(bool, true)
+          metadata                 = optional(map(string))
+        })))
+      })))
+    })), {})
+    lock = optional(object({
+      kind = string
+      name = optional(string, null)
+    }))
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = optional(string)
+      assign_to_caller                       = optional(bool, false)
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string), {})
+  }))
+  default     = {}
+  description = <<-EOT
+    A map of Private DNS Resolvers to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+    - `name` - (Required) The name of the DNS Resolver.
+    - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this resolver will be deployed. **Pattern cross-reference**: resolves to the resource group name via `var.resource_groups`.
+    - `location` - (Optional) The Azure region for the resolver. Defaults to `var.location`.
+    - `virtual_network` - (Required) The virtual network to deploy the resolver into. Provide exactly one of `key` or `resource_id`.
+      - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the virtual network resource ID via `local.vnet_resource_ids`.
+      - `resource_id` - (Optional) The resource ID of an existing virtual network. Use this for externally-managed VNets not created by this pattern.
+    - `inbound_endpoints` - (Optional) A map of inbound endpoints. The map key is deliberately arbitrary. Defaults to `{}`.
+      - `name` - (Optional) The name of the inbound endpoint.
+      - `subnet` - (Required) The subnet within the referenced virtual network for the inbound endpoint. Must be delegated to `Microsoft.Network/dnsResolvers`. Provide exactly one of `key` or `name`.
+        - `key` - (Optional) The key of the subnet in the `virtual_networks[].subnets` map. **Pattern cross-reference**: resolves to the Azure subnet name via `var.virtual_networks[vnet_key].subnets[subnet_key].name`.
+        - `name` - (Optional) The Azure name of the subnet (e.g., `"snet-dns-inbound"`). Use this for subnets not managed via the pattern's `virtual_networks` variable.
+      - `private_ip_allocation_method` - (Optional) The allocation method for the private IP. Possible values are `"Dynamic"` or `"Static"`. Defaults to `"Dynamic"`.
+      - `private_ip_address` - (Optional) The static private IP address when `private_ip_allocation_method` is `"Static"`.
+      - `tags` - (Optional) Tags for the inbound endpoint.
+    - `outbound_endpoints` - (Optional) A map of outbound endpoints. The map key is deliberately arbitrary. Defaults to `{}`.
+      - `name` - (Optional) The name of the outbound endpoint.
+      - `subnet` - (Required) The subnet within the referenced virtual network for the outbound endpoint. Must be delegated to `Microsoft.Network/dnsResolvers`. Provide exactly one of `key` or `name`.
+        - `key` - (Optional) The key of the subnet in the `virtual_networks[].subnets` map. **Pattern cross-reference**: resolves to the Azure subnet name via `var.virtual_networks[vnet_key].subnets[subnet_key].name`.
+        - `name` - (Optional) The Azure name of the subnet (e.g., `"snet-dns-outbound"`). Use this for subnets not managed via the pattern's `virtual_networks` variable.
+      - `tags` - (Optional) Tags for the outbound endpoint.
+      - `forwarding_ruleset` - (Optional) A map of forwarding rulesets to create for this outbound endpoint. Defaults to `null`.
+        - `name` - (Optional) The name of the forwarding ruleset.
+        - `link_with_outbound_endpoint_virtual_network` - (Optional) Whether to auto-link the ruleset with the outbound endpoint's VNet. Defaults to `true`.
+        - `metadata_for_outbound_endpoint_virtual_network_link` - (Optional) Metadata for the auto-created VNet link.
+        - `tags` - (Optional) Tags for the forwarding ruleset.
+        - `additional_virtual_network_links` - (Optional) Additional VNet links for the forwarding ruleset. Defaults to `{}`.
+          - `name` - (Optional) The name of the link.
+          - `virtual_network` - (Required) The virtual network to link. Provide exactly one of `key` or `resource_id`.
+            - `key` - (Optional) The key of the virtual network in the `virtual_networks` variable. **Pattern cross-reference**: resolves to the VNet resource ID via `local.vnet_resource_ids`.
+            - `resource_id` - (Optional) The resource ID of an existing virtual network.
+          - `metadata` - (Optional) Metadata for the link.
+        - `rules` - (Optional) A map of forwarding rules. Defaults to `null`.
+          - `name` - (Optional) The name of the rule.
+          - `domain_name` - (Required) The domain name to forward (e.g., `"contoso.com."`).
+          - `destination_ip_addresses` - (Required) A map where key is the IP address and value is the port (e.g., `{ "10.0.0.4" = "53" }`).
+          - `enabled` - (Optional) Whether the rule is enabled. Defaults to `true`.
+          - `metadata` - (Optional) Metadata for the rule.
+    - `lock` - (Optional) Controls the Resource Lock configuration for this resource.
+      - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
+      - `name` - (Optional) The name of the lock.
+    - `role_assignments` - (Optional) A map of role assignments to create on this resource. The map key is deliberately arbitrary.
+      - `role_definition_id_or_name` - (Required) The ID or name of the role definition to assign.
+      - `principal_id` - (Optional) The ID of the principal. Mutually exclusive with `assign_to_caller`.
+      - `assign_to_caller` - (Optional) When `true`, uses the Terraform caller's identity. Defaults to `false`.
+      - `description` - (Optional) The description of the role assignment.
+      - `skip_service_principal_aad_check` - (Optional) Skip AAD check for service principals. Defaults to `false`.
+      - `condition` - (Optional) The condition for the role assignment.
+      - `condition_version` - (Optional) Condition version. Valid values: `"2.0"`.
+      - `delegated_managed_identity_resource_id` - (Optional) Delegated managed identity resource ID.
+      - `principal_type` - (Optional) The type of the principal. Possible values: `"User"`, `"Group"`, `"ServicePrincipal"`.
+    - `tags` - (Optional) Tags to apply to the resolver. Defaults to `{}`.
+
+    > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`. Endpoint subnets can be referenced by `key` (map key in `virtual_networks[].subnets`) or `name` (Azure subnet name). Subnets must be delegated to `Microsoft.Network/dnsResolvers`.
+  EOT
+
+  validation {
+    condition = alltrue([
+      for key, v in var.private_dns_resolvers : (v.virtual_network.key != null) != (v.virtual_network.resource_id != null)
+    ])
+    error_message = "Each private_dns_resolvers entry must set exactly one of virtual_network.key or virtual_network.resource_id."
+  }
+}
+
 variable "private_dns_zones" {
   type = map(object({
     domain_name        = string

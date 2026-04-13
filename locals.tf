@@ -38,6 +38,9 @@ locals {
   # Firewall resource ID lookup
   firewall_resource_ids = { for key, mod in module.firewall : key => mod.resource_id }
 
+  # DNS Resolver resource ID lookup
+  dns_resolver_resource_ids = { for key, mod in module.private_dns_resolver : key => mod.resource_id }
+
   # Network Watcher defaults — pre-computed to avoid inline data source references
   # that can cause "known after apply" deferral when callers use depends_on.
   # When network_watcher_id is null, we construct the Azure-standard default from

@@ -52,6 +52,7 @@ The following variables are restored (were removed by Simplification Amendment b
 | `public_ips` | `map(object({...}))` | `avm-res-network-publicipaddress` | Implemented |
 | `firewall_policies` | `map(object({...}))` | `avm-res-network-firewallpolicy` | Implemented |
 | `firewalls` | `map(object({...}))` | `avm-res-network-azurefirewall` | Implemented |
+| `private_dns_resolvers` | `map(object({...}))` | `avm-res-network-dnsresolver` | Implemented |
 | `private_dns_zones` | `map(object({...}))` | `avm-res-network-privatednszone` | Implemented |
 | `byo_private_dns_zone_virtual_network_links` | `map(object({...}))` | DNS zone link sub-module | Implemented |
 | `flowlog_configuration` | `object({...})` | `avm-res-network-networkwatcher` | Implemented |
@@ -92,6 +93,10 @@ This pattern applies consistently:
 - `private_dns_zones.virtual_network_links[].virtual_network` → `{ key, resource_id }`
 - `byo_private_dns_zone_virtual_network_links[].virtual_network` → `{ key, resource_id }`
 - `flowlog_configuration.flow_logs[].virtual_network` → `{ key, resource_id }`
+- `private_dns_resolvers[].virtual_network` → `{ key, resource_id }`
+- `private_dns_resolvers[].inbound_endpoints[].subnet` → `{ key, name }`
+- `private_dns_resolvers[].outbound_endpoints[].subnet` → `{ key, name }`
+- `private_dns_resolvers[].outbound_endpoints[].forwarding_ruleset[].additional_virtual_network_links[].virtual_network` → `{ key, resource_id }`
 
 ### Updated Output Contracts
 
@@ -108,6 +113,8 @@ This pattern applies consistently:
 | `public_ip_ids` | `map(string)` | `module.public_ip` | Map of key → public IP resource ID |
 | `virtual_network_gateway_ids` | `map(string)` | `module.virtual_network_gateway` | Map of key → VNet gateway resource ID |
 | `private_dns_zone_ids` | `map(string)` | `module.private_dns_zone` | Map of key → DNS zone resource ID |
+| `private_dns_resolver_ids` | `map(string)` | `module.private_dns_resolver` | Map of key → DNS resolver resource ID |
+| `private_dns_resolver_inbound_endpoint_ips` | `map(map(string))` | `module.private_dns_resolver` | Map of resolver key → inbound endpoint IPs |
 | `network_watcher_id` | `string` | `module.network_watcher` | Network Watcher resource ID |
 
 > **Note**: The original contract content and previous amendments below are preserved for historical context. Where they conflict with this amendment, this amendment takes precedence.

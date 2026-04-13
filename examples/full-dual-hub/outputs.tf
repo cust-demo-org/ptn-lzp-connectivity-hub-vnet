@@ -37,3 +37,13 @@ output "network_watcher_id" {
   value       = module.hub.network_watcher_id
   description = "Network Watcher resource ID."
 }
+
+output "private_dns_resolver_ids" {
+  value       = module.hub.private_dns_resolver_ids
+  description = "Private DNS Resolver resource IDs."
+}
+
+output "private_dns_resolver_inbound_endpoint_ips" {
+  value       = module.hub.private_dns_resolver_inbound_endpoint_ips
+  description = "Private DNS Resolver inbound endpoint IP addresses."
+}
