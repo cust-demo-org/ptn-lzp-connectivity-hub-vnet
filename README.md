@@ -74,11 +74,14 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.13)
+
 ## Resources
 
 The following resources are used by this module:
 
 - [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [time_sleep.wait_for_network_watcher](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -554,9 +557,9 @@ Description: Network Watcher and VNet flow log configuration. When `null` (the d
   - `traffic_analytics` - (Optional) Traffic analytics configuration.
     - `enabled` - (Required) Whether traffic analytics is enabled.
     - `interval_in_minutes` - (Optional) How frequently service should do flow analytics in minutes.
-    - `workspace_id` - (Optional) The resource GUID of the attached workspace.
-    - `workspace_region` - (Optional) The location of the attached workspace.
-    - `workspace_resource_id` - (Optional) The resource ID of the attached workspace.
+    - `workspace_id` - (Required) The resource GUID of the attached workspace.
+    - `workspace_region` - (Required) The location of the attached workspace.
+    - `workspace_resource_id` - (Required) The resource ID of the attached workspace.
   - `version` - (Optional) The version (revision) of the flow log. Possible values are `1` and `2`.
 - `lock` - (Optional) Controls the Resource Lock configuration for this resource. The following properties can be specified:
   - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
@@ -577,6 +580,8 @@ Description: Network Watcher and VNet flow log configuration. When `null` (the d
 - `tags` - (Optional) Tags to apply to the Network Watcher. Defaults to `{}`.
 
 > **Pattern note:** If `location` is not specified, defaults to `var.location`. Tags in `tags` are merged with `var.tags`. If `network_watcher_id`, `network_watcher_name`, and `resource_group_name` are not specified, defaults to the Azure auto-created `NetworkWatcher_<location>` in `NetworkWatcherRG`.
+>
+> **Network Watcher delay:** Azure auto-creates a Network Watcher when the first VNet is deployed in a region. This is asynchronous and can take a few minutes. The pattern includes a configurable `time_sleep` (see `var.network_watcher_creation_delay`) that waits after VNet creation before configuring flow logs, enabling single-step deployment without needing to comment out `flowlog_configuration` on first apply.
 
 Type:
 
@@ -601,9 +606,9 @@ object({
       traffic_analytics = optional(object({
         enabled               = bool
         interval_in_minutes   = optional(number)
-        workspace_id          = optional(string)
-        workspace_region      = optional(string)
-        workspace_resource_id = optional(string)
+        workspace_id          = string
+        workspace_region      = string
+        workspace_resource_id = string
       }))
       version = optional(number)
     })), null)
@@ -635,7 +640,7 @@ Description: A map of NAT gateways to create. Referenced by hub subnets via `nat
 - `name` - (Required) The name of the NAT gateway. Changing this forces the creation of a new resource.
 - `resource_group_key` - (Required) The key of the resource group in the `resource_groups` variable where this NAT gateway will be deployed.
 - `location` - (Optional) The Azure region for the NAT gateway. Defaults to `null`.
-- `sku_name` - (Optional) The SKU name of the NAT gateway. Defaults to `"Standard"`.
+- `sku_name` - (Optional) The SKU name of the NAT gateway. Defaults to `"StandardV2"`.
 - `idle_timeout_in_minutes` - (Optional) The idle timeout in minutes for the NAT gateway. Defaults to `4`.
 - `zones` - (Optional) A set of Availability Zones in which the NAT gateway should be created.
 - `public_ips` - (Optional) A map of public IPs to create and associate with the NAT gateway. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. Defaults to `{}`.
@@ -651,7 +656,7 @@ Description: A map of NAT gateways to create. Referenced by hub subnets via `nat
   - `lock` - (Optional) Resource lock configuration for this public IP.
     - `kind` - (Required) The type of lock. Possible values are `"CanNotDelete"` and `"ReadOnly"`.
     - `name` - (Optional) The name of the lock.
-  - `sku` - (Optional) The SKU of the public IP. Defaults to `"Standard"`.
+  - `sku` - (Optional) The SKU of the public IP. Defaults to `"StandardV2"`.
   - `sku_tier` - (Optional) The SKU tier of the public IP. Defaults to `"Regional"`.
   - `tags` - (Optional) Tags to apply to this public IP.
   - `zones` - (Optional) A list of availability zones for the public IP.
@@ -696,7 +701,7 @@ map(object({
     name                    = string
     resource_group_key      = string
     location                = optional(string)
-    sku_name                = optional(string, "Standard")
+    sku_name                = optional(string, "StandardV2")
     idle_timeout_in_minutes = optional(number, 4)
     zones                   = optional(set(string))
     public_ips = optional(map(object({
@@ -714,7 +719,7 @@ map(object({
         kind = string
         name = optional(string, null)
       }), null)
-      sku      = optional(string, "Standard")
+      sku      = optional(string, "StandardV2")
       sku_tier = optional(string, "Regional")
       tags     = optional(map(string), null)
       zones    = optional(list(string))
@@ -869,6 +874,19 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_network_watcher_creation_delay"></a> [network\_watcher\_creation\_delay](#input\_network\_watcher\_creation\_delay)
+
+Description: The duration to wait after VNet creation before configuring flow logs. Azure auto-creates a  
+Network Watcher (`NetworkWatcher_<region>` in `NetworkWatcherRG`) asynchronously when the first  
+VNet is deployed in a region. This delay ensures the Network Watcher exists before the AVM  
+network\_watcher module attempts to read it via `data "azurerm_network_watcher"`. Set to `"0s"`  
+if the Network Watcher already exists (e.g., subsequent applies or pre-provisioned environments).  
+Only applies when `flowlog_configuration` is not `null`.
+
+Type: `string`
+
+Default: `"120s"`
 
 ### <a name="input_private_dns_zones"></a> [private\_dns\_zones](#input\_private\_dns\_zones)
 

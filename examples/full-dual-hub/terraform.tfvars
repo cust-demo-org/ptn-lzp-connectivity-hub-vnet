@@ -96,6 +96,7 @@ nat_gateways = {
   natgw_internet = {
     name               = "natgw-internet-dualhub"
     resource_group_key = "rg_connectivity"
+    sku_name           = "Standard"
     public_ip_addresses = {
       keys = ["pip_natgw"]
     }

@@ -19,7 +19,7 @@ This deploys a dual-hub topology — an internet egress/ingress hub and an intra
 - External storage account with blob private endpoint for flow log storage
 - BYO private dns zone virtual network links connecting external blob DNS zone to pattern VNets
 - Flow logs for both hub VNets referencing external storage account
-- Network Watcher auto-provisioned by flow log configuration
+- Network Watcher auto-provisioned after VNet creation (pattern includes `time_sleep` delay)
 - Dynamic cross-references built in `main.tf` locals (merging with `var` values)
 
 ## Notes

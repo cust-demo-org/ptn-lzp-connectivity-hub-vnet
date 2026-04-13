@@ -532,6 +532,18 @@ module "private_dns_zone_virtual_network_link" {
   tags                                   = merge(var.tags, each.value.tags)
 }
 
+# Azure auto-creates a Network Watcher (NetworkWatcher_<region>) in the
+# NetworkWatcherRG resource group when the first VNet is deployed in a region.
+# This provisioning is asynchronous and can take a few minutes. The time_sleep
+# resource ensures the Network Watcher exists before flow logs are configured.
+resource "time_sleep" "wait_for_network_watcher" {
+  count = var.flowlog_configuration != null ? 1 : 0
+
+  create_duration = var.network_watcher_creation_delay
+
+  depends_on = [module.virtual_network]
+}
+
 module "network_watcher" {
   source  = "Azure/avm-res-network-networkwatcher/azurerm"
   version = "0.3.2"
@@ -539,10 +551,10 @@ module "network_watcher" {
   count = var.flowlog_configuration != null ? 1 : 0
 
   enable_telemetry     = var.enable_telemetry
-  network_watcher_id   = coalesce(var.flowlog_configuration.network_watcher_id, "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/NetworkWatcherRG/providers/Microsoft.Network/networkWatchers/NetworkWatcher_${coalesce(var.flowlog_configuration.location, var.location)}")
-  network_watcher_name = coalesce(var.flowlog_configuration.network_watcher_name, "NetworkWatcher_${coalesce(var.flowlog_configuration.location, var.location)}")
-  resource_group_name  = coalesce(var.flowlog_configuration.resource_group_name, "NetworkWatcherRG")
-  location             = coalesce(var.flowlog_configuration.location, var.location)
+  network_watcher_id   = local.flowlog_network_watcher_id
+  network_watcher_name = local.flowlog_network_watcher_name
+  resource_group_name  = local.flowlog_resource_group_name
+  location             = local.flowlog_location
   flow_logs = var.flowlog_configuration.flow_logs != null ? {
     for k, fl in var.flowlog_configuration.flow_logs : k => {
       enabled = fl.enabled
@@ -570,4 +582,6 @@ module "network_watcher" {
     }
   }
   tags = merge(var.tags, var.flowlog_configuration.tags)
+
+  depends_on = [time_sleep.wait_for_network_watcher]
 }

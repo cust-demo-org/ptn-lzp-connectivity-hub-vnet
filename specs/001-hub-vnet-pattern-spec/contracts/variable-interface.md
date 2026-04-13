@@ -240,6 +240,9 @@ All root-level variable descriptions follow AVM module documentation conventions
 | Variable | Type | Required | Default |
 |----------|------|----------|---------|
 | `flowlog_configuration` | `object({...})` | No | `null` |
+| `network_watcher_creation_delay` | `string` | No | `"120s"` |
+
+> **Network Watcher delay:** Azure auto-creates a Network Watcher when the first VNet is deployed in a region. This is asynchronous. The pattern includes a `time_sleep` resource (controlled by `network_watcher_creation_delay`) that depends on VNet creation and delays flow log configuration, enabling single-step deployment.
 
 ---
 
