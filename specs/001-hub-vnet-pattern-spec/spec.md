@@ -53,7 +53,7 @@ The decomposed architecture replaces the single pattern module with individual A
 - `virtual_networks` — **ADDED**. Flat global map for VNet definitions with subnets, peerings, DNS, DDoS, etc.
 - `route_tables` — **RESTORED**. Flat global map for route table definitions.
 - `private_dns_zones` — **RESTORED**. Flat global map for private DNS zone definitions with VNet links.
-- `byo_private_dns_zone_virtual_network_links` — **RESTORED**. Flat global map for BYO DNS zone VNet link definitions.
+- `byo_private_dns_zones` — **RESTORED** (renamed from `byo_private_dns_zone_virtual_network_links`). Map of BYO DNS zones with nested VNet links, aligned with `private_dns_zones` structure.
 - `virtual_network_gateways` — **ADDED**. Flat global map for VPN/ExpressRoute gateway definitions.
 - `public_ips` — **ADDED**. Flat global map for standalone public IP definitions.
 - `firewall_policies` — **ADDED**. Flat global map for firewall policy definitions.
@@ -98,7 +98,7 @@ The decomposed architecture replaces the single pattern module with individual A
 
 ### Variables Removed
 
-`byo_log_analytics_workspace`, `log_analytics_workspace_configuration`, `route_tables`, `private_dns_zones`, `byo_private_dns_zone_virtual_network_links`, `managed_identities`, `spoke_virtual_networks`, `storage_accounts`, `role_assignments`
+`byo_log_analytics_workspace`, `log_analytics_workspace_configuration`, `route_tables`, `private_dns_zones`, `byo_private_dns_zone_virtual_network_links` (now `byo_private_dns_zones`), `managed_identities`, `spoke_virtual_networks`, `storage_accounts`, `role_assignments`
 
 ### Outputs Removed
 

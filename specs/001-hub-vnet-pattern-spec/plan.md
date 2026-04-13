@@ -43,7 +43,7 @@ The monolithic `hub_virtual_networks` variable is replaced with individual flat 
 | `timeouts` | Removed (root-level) | Per-resource in individual variables |
 | — | `route_tables` | Restored from Simplification Amendment |
 | — | `private_dns_zones` | Restored from Simplification Amendment |
-| — | `byo_private_dns_zone_virtual_network_links` | Restored from Simplification Amendment |
+| — | `byo_private_dns_zones` | Restored (renamed from `byo_private_dns_zone_virtual_network_links`), nested VNet links under each zone |
 
 ### Key Resolution Pattern
 

@@ -24,7 +24,7 @@ The following variables are removed — they were specific to the monolithic cor
 The following variables are restored (were removed by Simplification Amendment because the core pattern handled them):
 - `route_tables` — Flat global map for route table definitions
 - `private_dns_zones` — Flat global map for private DNS zone definitions with VNet links
-- `byo_private_dns_zone_virtual_network_links` — Flat global map for BYO DNS zone VNet link definitions
+- `byo_private_dns_zones` — Map of BYO DNS zones with nested VNet links (renamed from `byo_private_dns_zone_virtual_network_links`)
 
 ### New Variables
 
@@ -54,7 +54,7 @@ The following variables are restored (were removed by Simplification Amendment b
 | `firewalls` | `map(object({...}))` | `avm-res-network-azurefirewall` | Implemented |
 | `private_dns_resolvers` | `map(object({...}))` | `avm-res-network-dnsresolver` | Implemented |
 | `private_dns_zones` | `map(object({...}))` | `avm-res-network-privatednszone` | Implemented |
-| `byo_private_dns_zone_virtual_network_links` | `map(object({...}))` | DNS zone link sub-module | Implemented |
+| `byo_private_dns_zones` | `map(object({...}))` | DNS zone link sub-module | Implemented |
 | `flowlog_configuration` | `object({...})` | `avm-res-network-networkwatcher` | Implemented |
 
 ### Cross-Reference Convention: Key/ID Pattern
@@ -91,7 +91,7 @@ This pattern applies consistently:
 - `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, resource_id }`
 - `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, resource_id }`
 - `private_dns_zones.virtual_network_links[].virtual_network` → `{ key, resource_id }`
-- `byo_private_dns_zone_virtual_network_links[].virtual_network` → `{ key, resource_id }`
+- `byo_private_dns_zones[].virtual_network_links[].virtual_network` → `{ key, resource_id }`
 - `flowlog_configuration.flow_logs[].virtual_network` → `{ key, resource_id }`
 - `private_dns_resolvers[].virtual_network` → `{ key, resource_id }`
 - `private_dns_resolvers[].inbound_endpoints[].subnet` → `{ key, name }`
@@ -238,7 +238,7 @@ All root-level variable descriptions follow AVM module documentation conventions
 |----------|------|----------|---------|
 | `byo_log_analytics_workspace` | `object({resource_id})` | No | `null` |
 | `log_analytics_workspace_configuration` | `object({name, resource_group_key, location?, retention_in_days?, ...})` | No | `null` |
-| `byo_private_dns_zone_virtual_network_links` | `map(object({...}))` | No | `{}` |
+| `byo_private_dns_zones` | `map(object({...}))` | No | `{}` |
 
 **Contract**: BYO resource ID takes precedence. If BYO is null and configuration is provided, wrapper creates the resource.
 

@@ -45,7 +45,7 @@ Examples must be rewritten to reflect the new decomposed architecture. The consu
 - **`full-dual-hub/`**: Removed inline common services VNet, spoke peering, storage accounts, LAW. Flow logs now use `storage_account_id` directly. Example now deploys: 1 resource group, 2 hub VNets (internet + intranet) with firewalls, 2 NSGs, 1 NAT gateway. External resources (RG, VNet, storage account with blob PEP, private DNS zone) created outside the pattern and wired in via peerings, BYO DNS zone links, and flowlog configuration.
 - Both examples use `terraform.tfvars` with `variables.tf` for passthrough (no `random` provider needed).
 - All example variables include a `description` attribute with a brief purpose statement and a pointer: "Refer to the main pattern module variable descriptions for complete details."
-- Removed variables from example module calls: `byo_log_analytics_workspace`, `log_analytics_workspace_configuration`, `route_tables`, `private_dns_zones`, `byo_private_dns_zone_virtual_network_links`, `managed_identities`, `spoke_virtual_networks`, `storage_accounts`, `role_assignments`.
+- Removed variables from example module calls: `byo_log_analytics_workspace`, `log_analytics_workspace_configuration`, `route_tables`, `private_dns_zones`, `byo_private_dns_zone_virtual_network_links` (now `byo_private_dns_zones`), `managed_identities`, `spoke_virtual_networks`, `storage_accounts`, `role_assignments`.
 
 > **Note**: The original contract content below is preserved for historical context. Where it conflicts with this amendment, the amendment takes precedence.
 
@@ -249,17 +249,20 @@ locals {
     })
   }
 
-  # BYO DNS zone links — blob DNS zone → both hub VNets
-  byo_private_dns_zone_virtual_network_links = merge(var.byo_private_dns_zone_virtual_network_links, {
-    link_blob_internet = {
-      name                = "link-blob-to-internet"
+  # BYO DNS zones — blob DNS zone → both hub VNets
+  byo_private_dns_zones = merge(var.byo_private_dns_zones, {
+    blob = {
       private_dns_zone_id = azurerm_private_dns_zone.blob.id
-      virtual_network     = { key = "vnet_internet" }
-    }
-    link_blob_intranet = {
-      name                = "link-blob-to-intranet"
-      private_dns_zone_id = azurerm_private_dns_zone.blob.id
-      virtual_network     = { key = "vnet_intranet" }
+      virtual_network_links = {
+        link_blob_internet = {
+          name = "link-blob-to-internet"
+          virtual_network     = { key = "vnet_internet" }
+        }
+        link_blob_intranet = {
+          name = "link-blob-to-intranet"
+          virtual_network     = { key = "vnet_intranet" }
+        }
+      }
     }
   })
 
@@ -291,7 +294,7 @@ locals {
 module "hub" {
   source               = "../../"
   virtual_networks     = local.virtual_networks
-  byo_private_dns_zone_virtual_network_links = local.byo_private_dns_zone_virtual_network_links
+  byo_private_dns_zones           = local.byo_private_dns_zones
   flowlog_configuration      = local.flowlog_configuration
   # ... other vars passed through
 }
