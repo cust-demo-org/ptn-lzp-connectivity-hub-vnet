@@ -100,10 +100,12 @@ locals {
     for k, v in var.virtual_networks : k => merge(v, {
       peerings = merge(coalesce(try(v.peerings, null), {}), {
         peer_to_flowlog = {
-          name                               = "peer-${k}-to-flowlog"
-          remote_virtual_network_resource_id = azurerm_virtual_network.flowlog.id
-          create_reverse_peering             = true
-          reverse_name                       = "peer-flowlog-to-${k}"
+          name = "peer-${k}-to-flowlog"
+          remote_virtual_network = {
+            resource_id = azurerm_virtual_network.flowlog.id
+          }
+          create_reverse_peering = true
+          reverse_name           = "peer-flowlog-to-${k}"
         }
       })
     })

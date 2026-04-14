@@ -77,6 +77,15 @@ resource "terraform_data" "validation" {
       error_message = "One or more private_dns_zones virtual_network_links reference a virtual_network.key that does not exist in var.virtual_networks."
     }
     precondition {
+      condition = alltrue(flatten([
+        for vnet_key, vnet in var.virtual_networks : [
+          for pk, pv in vnet.peerings :
+          pv.remote_virtual_network.key == null || contains(keys(var.virtual_networks), pv.remote_virtual_network.key)
+        ]
+      ]))
+      error_message = "One or more virtual_networks peerings reference a remote_virtual_network.key that does not exist in var.virtual_networks."
+    }
+    precondition {
       condition = alltrue([
         for zone_key, zone in var.byo_private_dns_zones : alltrue([
           for vnl_key, vnl in zone.virtual_network_links :
@@ -280,7 +289,15 @@ module "virtual_network" {
     })
   }
 
-  peerings            = each.value.peerings
+  peerings = {
+    for pk, pv in each.value.peerings : pk => merge(pv, {
+      remote_virtual_network_resource_id = (
+        pv.remote_virtual_network.key != null
+        ? "${local.resource_group_resource_ids[var.virtual_networks[pv.remote_virtual_network.key].resource_group_key]}/providers/Microsoft.Network/virtualNetworks/${var.virtual_networks[pv.remote_virtual_network.key].name}"
+        : pv.remote_virtual_network.resource_id
+      )
+    })
+  }
   diagnostic_settings = each.value.diagnostic_settings
   lock                = each.value.lock
   tags                = merge(var.tags, each.value.tags)
