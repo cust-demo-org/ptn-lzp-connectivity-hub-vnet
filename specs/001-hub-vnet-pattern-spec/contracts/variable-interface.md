@@ -87,6 +87,7 @@ This pattern applies consistently:
 - `virtual_network.subnets[].network_security_group` → `{ key, resource_id }`
 - `virtual_network.subnets[].route_table` → `{ key, resource_id }`
 - `virtual_network.subnets[].nat_gateway` → `{ key, resource_id }`
+- `virtual_network.peerings[].remote_virtual_network` → `{ key, resource_id }`
 - `virtual_network_gateway.virtual_network` → `{ key, resource_id }`
 - `virtual_network_gateway.gateway_subnet` → `{ vnet_key, subnet_key, resource_id }`
 - `virtual_network_gateway.ip_configurations[].public_ip_address` → `{ key, resource_id }`
