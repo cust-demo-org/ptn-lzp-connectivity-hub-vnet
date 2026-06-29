@@ -2005,61 +2005,57 @@ Default: `{}`
 
 The following outputs are exported:
 
-### <a name="output_firewall_ids"></a> [firewall\_ids](#output\_firewall\_ids)
+### <a name="output_byo_private_dns_zones"></a> [byo\_private\_dns\_zones](#output\_byo\_private\_dns\_zones)
 
-Description: A map of firewall key to Azure Firewall resource ID.
+Description: Map of BYO Private DNS Zone keys to their resource IDs and names. Empty map when no byo\_private\_dns\_zones are configured.
 
-### <a name="output_firewall_policy_ids"></a> [firewall\_policy\_ids](#output\_firewall\_policy\_ids)
+### <a name="output_firewall_policies"></a> [firewall\_policies](#output\_firewall\_policies)
 
-Description: A map of firewall policy key to Firewall Policy resource ID.
+Description: Map of firewall policy keys to their resource IDs and names.
 
-### <a name="output_nat_gateway_resource_ids"></a> [nat\_gateway\_resource\_ids](#output\_nat\_gateway\_resource\_ids)
+### <a name="output_firewalls"></a> [firewalls](#output\_firewalls)
 
-Description: A map of NAT gateway key to NAT Gateway resource ID.
+Description: Map of firewall keys to their resource IDs and names.
 
-### <a name="output_network_watcher_id"></a> [network\_watcher\_id](#output\_network\_watcher\_id)
+### <a name="output_nat_gateways"></a> [nat\_gateways](#output\_nat\_gateways)
 
-Description: The resource ID of the Network Watcher, or null if not created.
+Description: Map of NAT gateway keys to their resource IDs and names.
 
-### <a name="output_nsg_resource_ids"></a> [nsg\_resource\_ids](#output\_nsg\_resource\_ids)
+### <a name="output_network_security_groups"></a> [network\_security\_groups](#output\_network\_security\_groups)
 
-Description: A map of NSG key to Network Security Group resource ID.
+Description: Map of NSG keys to their resource IDs and names.
 
-### <a name="output_private_dns_resolver_ids"></a> [private\_dns\_resolver\_ids](#output\_private\_dns\_resolver\_ids)
+### <a name="output_network_watcher"></a> [network\_watcher](#output\_network\_watcher)
 
-Description: A map of private DNS resolver key to DNS Resolver resource ID.
+Description: Network Watcher resource ID and flow log details. Null when flowlog\_configuration is not provided.
 
-### <a name="output_private_dns_resolver_inbound_endpoint_ips"></a> [private\_dns\_resolver\_inbound\_endpoint\_ips](#output\_private\_dns\_resolver\_inbound\_endpoint\_ips)
+### <a name="output_private_dns_resolvers"></a> [private\_dns\_resolvers](#output\_private\_dns\_resolvers)
 
-Description: A map of private DNS resolver key to a map of inbound endpoint key to private IP address.
+Description: Map of private DNS resolver keys to their resource IDs, names, and inbound endpoint IPs (map of inbound endpoint key to private IP address).
 
-### <a name="output_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#output\_private\_dns\_zone\_ids)
+### <a name="output_private_dns_zones"></a> [private\_dns\_zones](#output\_private\_dns\_zones)
 
-Description: A map of private DNS zone key to Private DNS Zone resource ID.
+Description: Map of Private DNS Zone keys to their resource IDs and names.
 
-### <a name="output_public_ip_ids"></a> [public\_ip\_ids](#output\_public\_ip\_ids)
+### <a name="output_public_ips"></a> [public\_ips](#output\_public\_ips)
 
-Description: A map of public IP key to Public IP resource ID.
+Description: Map of public IP keys to their resource IDs, names, and assigned IP addresses.
 
-### <a name="output_resource_group_ids"></a> [resource\_group\_ids](#output\_resource\_group\_ids)
+### <a name="output_resource_groups"></a> [resource\_groups](#output\_resource\_groups)
 
-Description: A map of resource group key to resource group resource ID.
+Description: Map of resource group keys to their resource IDs and names.
 
-### <a name="output_resource_group_names"></a> [resource\_group\_names](#output\_resource\_group\_names)
+### <a name="output_route_tables"></a> [route\_tables](#output\_route\_tables)
 
-Description: A map of resource group key to resource group name.
+Description: Map of route table keys to their resource IDs and names.
 
-### <a name="output_route_table_ids"></a> [route\_table\_ids](#output\_route\_table\_ids)
+### <a name="output_virtual_network_gateways"></a> [virtual\_network\_gateways](#output\_virtual\_network\_gateways)
 
-Description: A map of route table key to Route Table resource ID.
+Description: Map of virtual network gateway keys to their resource IDs and names.
 
-### <a name="output_virtual_network_gateway_ids"></a> [virtual\_network\_gateway\_ids](#output\_virtual\_network\_gateway\_ids)
+### <a name="output_virtual_networks"></a> [virtual\_networks](#output\_virtual\_networks)
 
-Description: A map of virtual network gateway key to VNet Gateway resource ID.
-
-### <a name="output_virtual_network_ids"></a> [virtual\_network\_ids](#output\_virtual\_network\_ids)
-
-Description: A map of virtual network key to VNet resource ID.
+Description: Map of VNet keys to their resource IDs, names, address spaces, subnet details, and peering details.
 
 ## Modules
 

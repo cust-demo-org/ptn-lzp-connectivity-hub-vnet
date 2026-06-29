@@ -1,73 +1,108 @@
-# Individual resource module outputs
-
-output "virtual_network_ids" {
-  value       = local.vnet_resource_ids
-  description = "A map of virtual network key to VNet resource ID."
+output "resource_groups" {
+  value = { for key, mod in module.resource_group : key => {
+    resource_id = mod.resource_id
+    name        = mod.name
+  } }
+  description = "Map of resource group keys to their resource IDs and names."
 }
 
-output "firewall_ids" {
-  value       = local.firewall_resource_ids
-  description = "A map of firewall key to Azure Firewall resource ID."
+output "network_security_groups" {
+  value = { for key, mod in module.network_security_group : key => {
+    resource_id = mod.resource_id
+    name        = mod.name
+  } }
+  description = "Map of NSG keys to their resource IDs and names."
 }
 
-output "firewall_policy_ids" {
-  value       = local.firewall_policy_resource_ids
-  description = "A map of firewall policy key to Firewall Policy resource ID."
+output "route_tables" {
+  value = { for key, mod in module.route_table : key => {
+    resource_id = mod.resource_id
+    name        = mod.name
+  } }
+  description = "Map of route table keys to their resource IDs and names."
 }
 
-output "public_ip_ids" {
-  value       = local.public_ip_resource_ids
-  description = "A map of public IP key to Public IP resource ID."
+output "nat_gateways" {
+  value = { for key, mod in module.nat_gateway : key => {
+    resource_id = mod.resource_id
+    name        = mod.resource.name
+  } }
+  description = "Map of NAT gateway keys to their resource IDs and names."
 }
 
-output "route_table_ids" {
-  value       = local.rt_resource_ids
-  description = "A map of route table key to Route Table resource ID."
+output "public_ips" {
+  value = { for key, mod in module.public_ip : key => {
+    resource_id       = mod.resource_id
+    name              = mod.name
+    public_ip_address = mod.public_ip_address
+  } }
+  description = "Map of public IP keys to their resource IDs, names, and assigned IP addresses."
 }
 
-output "private_dns_zone_ids" {
-  value       = { for key, mod in module.private_dns_zone : key => mod.resource_id }
-  description = "A map of private DNS zone key to Private DNS Zone resource ID."
+output "virtual_networks" {
+  value = { for key, mod in module.virtual_network : key => {
+    resource_id    = mod.resource_id
+    name           = mod.name
+    address_spaces = mod.address_spaces
+    subnets        = mod.subnets
+    peerings       = mod.peerings
+  } }
+  description = "Map of VNet keys to their resource IDs, names, address spaces, subnet details, and peering details."
 }
 
-output "private_dns_resolver_ids" {
-  value       = local.dns_resolver_resource_ids
-  description = "A map of private DNS resolver key to DNS Resolver resource ID."
+output "virtual_network_gateways" {
+  value = { for key, mod in module.virtual_network_gateway : key => {
+    resource_id = mod.resource_id
+    name        = mod.virtual_network_gateway.name
+  } }
+  description = "Map of virtual network gateway keys to their resource IDs and names."
 }
 
-output "private_dns_resolver_inbound_endpoint_ips" {
-  value       = { for key, mod in module.private_dns_resolver : key => mod.inbound_endpoint_ips }
-  description = "A map of private DNS resolver key to a map of inbound endpoint key to private IP address."
+output "firewall_policies" {
+  value = { for key, mod in module.firewall_policy : key => {
+    resource_id = mod.resource_id
+    name        = mod.resource.name
+  } }
+  description = "Map of firewall policy keys to their resource IDs and names."
 }
 
-output "virtual_network_gateway_ids" {
-  value       = { for key, mod in module.virtual_network_gateway : key => mod.resource_id }
-  description = "A map of virtual network gateway key to VNet Gateway resource ID."
+output "firewalls" {
+  value = { for key, mod in module.firewall : key => {
+    resource_id = mod.resource_id
+    name        = mod.resource.name
+  } }
+  description = "Map of firewall keys to their resource IDs and names."
 }
 
-# Supplementary resource outputs
-
-output "resource_group_ids" {
-  value       = local.resource_group_resource_ids
-  description = "A map of resource group key to resource group resource ID."
+output "private_dns_resolvers" {
+  value = { for key, mod in module.private_dns_resolver : key => {
+    resource_id          = mod.resource_id
+    name                 = mod.name
+    inbound_endpoint_ips = mod.inbound_endpoint_ips
+  } }
+  description = "Map of private DNS resolver keys to their resource IDs, names, and inbound endpoint IPs (map of inbound endpoint key to private IP address)."
 }
 
-output "resource_group_names" {
-  value       = local.resource_group_names
-  description = "A map of resource group key to resource group name."
+output "private_dns_zones" {
+  value = { for key, mod in module.private_dns_zone : key => {
+    resource_id = mod.resource_id
+    name        = mod.resource.name
+  } }
+  description = "Map of Private DNS Zone keys to their resource IDs and names."
 }
 
-output "nsg_resource_ids" {
-  value       = local.nsg_resource_ids
-  description = "A map of NSG key to Network Security Group resource ID."
+output "byo_private_dns_zones" {
+  value = { for key, zone in var.byo_private_dns_zones : key => {
+    resource_id = zone.private_dns_zone_id
+    name        = split("/", zone.private_dns_zone_id)[length(split("/", zone.private_dns_zone_id)) - 1]
+  } }
+  description = "Map of BYO Private DNS Zone keys to their resource IDs and names. Empty map when no byo_private_dns_zones are configured."
 }
 
-output "nat_gateway_resource_ids" {
-  value       = local.nat_gateway_resource_ids
-  description = "A map of NAT gateway key to NAT Gateway resource ID."
-}
-
-output "network_watcher_id" {
-  value       = try(module.network_watcher[0].resource_id, null)
-  description = "The resource ID of the Network Watcher, or null if not created."
+output "network_watcher" {
+  value = var.flowlog_configuration != null ? {
+    resource_id = module.network_watcher[0].resource_id
+    flow_logs   = module.network_watcher[0].resource_flow_log
+  } : null
+  description = "Network Watcher resource ID and flow log details. Null when flowlog_configuration is not provided."
 }
